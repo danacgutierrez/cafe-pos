@@ -7,7 +7,8 @@ export class InMemoryIngredientRepository implements IngredientRepository {
     private readonly movements: InventoryMovement[] = [];
     
     async findById(id: string): Promise<Ingredient | null> {
-        return this.ingredients.get(id) ?? null;
+        const found = this.ingredients.get(id);
+        return found ? { ...found } : null;
     }
 
     async findAll(): Promise<Ingredient[]> {
@@ -26,6 +27,8 @@ export class InMemoryIngredientRepository implements IngredientRepository {
     async adjustStock(ingredientId: string, newStock: number, movement: InventoryMovement): Promise<void> {
         const ingredient = this.ingredients.get(ingredientId);
         if(!ingredient) {
+            // A generic Error here means "caller passed a bad id",
+            // not a business rule — kept plain on purpose, mirrors the service's own choice.
             throw new Error(`Ingredient ${ingredientId} doesn't exist`)
         }
 

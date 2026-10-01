@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scenarios": "tsx src/scenarios.ts"
+    "scenarios:inventory": "tsx src/scenarios-inventory.ts",
+    "scenarios:menu": "tsx src/scenarios-menu.ts"
+
   },
   "repository": {
     "type": "git",
