@@ -16,3 +16,9 @@ export class InactiveProductError extends DomainError {
         super(`El producto '${productName}' se encuentra inactivo y no puede ser vendido.`);
     }
 }
+
+export class NonExistentProductError extends DomainError {
+    constructor() {
+        super(`El producto no existe en el catálogo.`);
+    }
+}

@@ -1,0 +1,86 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generado/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Product {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(100)
+  price       Float
+  description String  @db.Text
+  isActive    Boolean @default(true)
+
+  orderDetails OrderDetail[]
+
+  @@map("products")
+}
+
+model Client {
+  id             Int    @id @default(autoincrement())
+  firstName      String @db.VarChar(100)
+  lastName       String @db.VarChar(100)
+  loyaltyBalance Float  @default(0)
+  phoneNumber    String @db.VarChar(20)
+
+  orders  Order[]
+  usuario Usuario?
+
+  @@map("clients")
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  scheduleTime  DateTime
+  notes         String?  @db.Text
+  total         Float
+  deliveryNotes String?  @db.Text
+
+  deliveryMode    String @db.VarChar(20)
+  fulfillmentType String @db.VarChar(20)
+  status          String @default("PENDING") @db.VarChar(20)
+
+  deliveryFee Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  idClient             Int
+  idLoyaltyTransaction Int?
+
+  client       Client        @relation(fields: [idClient], references: [id])
+  orderDetails OrderDetail[]
+
+  @@index([idClient])
+  @@map("orders")
+}
+
+model OrderDetail {
+  id       Int   @id @default(autoincrement())
+  quantity Int
+  price    Float
+
+  idOrder   Int
+  idProduct Int
+
+  order   Order   @relation(fields: [idOrder], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [idProduct], references: [id])
+
+  @@index([idOrder])
+  @@index([idProduct])
+  @@map("order_details")
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  correo       String   @unique @db.VarChar(160)
+  passwordHash String   @db.VarChar(72)
+  rol          String   @default("client") @db.VarChar(20)
+  creadoEn     DateTime @default(now())
+  idClient     Int?     @unique
+  client       Client?  @relation(fields: [idClient], references: [id])
+
+  @@map("usuarios")
+}
