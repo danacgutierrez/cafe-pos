@@ -13,4 +13,5 @@ export interface DrinkRepository extends Repository<Drink> {
     existsByAllowedSizeId(sizeId: string): Promise<boolean>;
     existsByAllowedMilkTypeId(milkTypeId: string): Promise<boolean>;
     existsByAllowedSweetenerId(sweetenerId: string): Promise<boolean>;
+    existsByExtraId(extraId: string): Promise<boolean>;
 }

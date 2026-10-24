@@ -23,7 +23,7 @@ export const deletionScenarios: Scenario[] = [
         title: "Anything a drink uses cannot be deleted; deleting the drink frees it",
         kind: "rejected",
         async run() {
-            const { menu, options, drinkExtras } = buildMenu();
+            const { menu, options } = buildMenu();
             const catalog = await seedCatalog(options);
             const drink = await menu.createDrink(fullDrinkInput(catalog));
 
@@ -41,7 +41,6 @@ export const deletionScenarios: Scenario[] = [
             }
 
             await menu.deleteDrink(drink.id);
-            assert.equal((await drinkExtras.findAll()).length, 0, "the drink's extras go with it");
             await expectRejected(() => menu.getDrink(drink.id), NotFoundError);
 
             // Nothing uses them any more.
@@ -50,7 +49,7 @@ export const deletionScenarios: Scenario[] = [
             await options.deleteSize(catalog.large.id);
             await options.deleteMilkType(catalog.oatMilk.id);
             await options.deleteSweetener(catalog.extraSweet.id);
-            await options.deleteExtra(catalog.coldFoam.id);
+            await options.deleteExtra(catalog.espressoShot.id); // its link went away with the drink
             console.log("  OK: after deleting the drink, all of them could be deleted");
         },
     },

@@ -5,7 +5,6 @@
  * It has no id of its own: the pair (drinkId, extraId) identifies it.
  */
 export interface DrinkExtra {
-    readonly drinkId: string;
     readonly extraId: string;
     includedQuantity: number;
 }

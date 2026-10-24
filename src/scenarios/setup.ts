@@ -12,7 +12,6 @@ import { InMemorySizeRepository } from "../menu/infra/in-memory-size.repository"
 import { InMemoryMilkTypeRepository } from "../menu/infra/in-memory-milk-type.repository";
 import { InMemorySweetenerRepository } from "../menu/infra/in-memory-sweetener.repository";
 import { InMemoryExtraRepository } from "../menu/infra/in-memory-extra.repository";
-import { InMemoryDrinkExtraRepository } from "../menu/infra/in-memory-drink-extra.repository";
 
 /** Builds an empty menu. Each scenario starts from scratch. */
 export function buildMenu() {
@@ -23,12 +22,11 @@ export function buildMenu() {
     const milkTypes = new InMemoryMilkTypeRepository();
     const sweeteners = new InMemorySweetenerRepository();
     const extras = new InMemoryExtraRepository();
-    const drinkExtras = new InMemoryDrinkExtraRepository();
 
-    const menu = new MenuService(drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras, drinkExtras);
-    const options = new MenuOptionsService(drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras, drinkExtras);
+    const menu = new MenuService(drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras);
+    const options = new MenuOptionsService(drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras);
 
-    return { menu, options, drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras, drinkExtras };
+    return { menu, options, drinks, drinkTypes, drinkFlavors, sizes, milkTypes, sweeteners, extras };
 }
 
 export type Kit = ReturnType<typeof buildMenu>;

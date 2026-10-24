@@ -16,7 +16,6 @@ import { DuplicateNameError } from "../shared/duplicate-name-error"
 import { NotFoundError } from "../shared/not-found-error"
 import { DuplicateSweetenerLevelError, InUseError } from "./domain/errors"
 import { MAX_EXTRA_QUANTITY, MAX_SWEETENER_LEVEL } from "./domain/limits"
-import { DrinkExtraRepository } from "./domain/repositories/drink-extra.repository"
 import { assertIntegerInRange, assertValidPrice, normalizeName } from "./domain/validation"
 import { setActive } from "./domain/activation"
 
@@ -41,7 +40,6 @@ export class MenuOptionsService {
         private readonly milkTypes: MilkTypeRepository,
         private readonly sweeteners: SweetenerRepository,
         private readonly extras: ExtraRepository,
-        private readonly drinkExtras: DrinkExtraRepository,
     ) { }
 
     /** -------------------------------------------- CREATE -------------------------------------------- */
@@ -177,7 +175,7 @@ export class MenuOptionsService {
     }
 
     deleteExtra(id: string): Promise<void> {
-        return this.deleteIfUnused(this.extras, "Extra", id, () => this.drinkExtras.existsByExtraId(id));
+        return this.deleteIfUnused(this.extras, "Extra", id, () => this.drinks.existsByExtraId(id));
     }
 
     /** -------------------------------------------- HELPERS -------------------------------------------- */

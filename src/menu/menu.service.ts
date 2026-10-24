@@ -24,8 +24,6 @@ import {
     InactiveOptionError,
 } from "./domain/errors"
 import { DESCRIPTION_MAX_LENGTH, IMAGE_URL_MAX_LENGTH, MAX_EXTRA_QUANTITY } from "./domain/limits"
-import { DrinkExtra } from "./domain/entities/drink-extra.entity"
-import { DrinkExtraRepository } from "./domain/repositories/drink-extra.repository"
 import { assertIntegerInRange, assertNoRepeats, assertValidTotalPrice, normalizeName } from "./domain/validation"
 import { setActive } from "./domain/activation"
 
@@ -36,7 +34,6 @@ interface MenuLookups {
     sizes: Map<string, Size>;
     milkTypes: Map<string, MilkType>;
     extras: Map<string, Extra>;
-    extrasByDrink: Map<string, DrinkExtra[]>;
 }
 
 /**
@@ -53,7 +50,6 @@ export class MenuService {
         private readonly milkTypes: MilkTypeRepository,
         private readonly sweeteners: SweetenerRepository,
         private readonly extras: ExtraRepository,
-        private readonly drinkExtras: DrinkExtraRepository,
     ) { }
 
     /** -------------------------------------------- DRINKS -------------------------------------------- */
@@ -122,11 +118,8 @@ export class MenuService {
             allowedSizeIds: [...sizeIds],
             allowedMilkTypeIds: [...milkTypeIds],
             allowedSweetenerIds: [...sweetenerIds],
+            extras: extraInputs.map((e) => ({ extraId: e.extraId, includedQuantity: e.includedQuantity })),
         });
-        await this.drinkExtras.saveAll(
-            drink.id,
-            extraInputs.map((e) => ({ drinkId: drink.id, extraId: e.extraId, includedQuantity: e.includedQuantity })),
-        );
 
         return this.getDrink(drink.id);
     }
@@ -175,8 +168,7 @@ export class MenuService {
         if (!(await this.drinks.findById(id))) {
             throw new NotFoundError("Drink", id);
         }
-        // The "it already appeared in an order" check goes here once the Orders module exists.
-        await this.drinkExtras.deleteByDrinkId(id);
+        // The drinks extras are part of it, so they go away with it in the same operation
         await this.drinks.delete(id);
     }
 
@@ -192,7 +184,7 @@ export class MenuService {
      * are active, it has an active size, an active milk when it offers milk,
      * and every extra it includes is active.
      */
-    private isAvailable(drink: Drink, type: DrinkType, flavor: DrinkFlavor, links: DrinkExtra[], lookups: MenuLookups): boolean {
+    private isAvailable(drink: Drink, type: DrinkType, flavor: DrinkFlavor, lookups: MenuLookups): boolean {
         if (!drink.isActive || !type.isActive || !flavor.isActive) {
             return false;
         }
@@ -205,7 +197,7 @@ export class MenuService {
         if (drink.allowedMilkTypeIds.length > 0 && !hasActive(drink.allowedMilkTypeIds, lookups.milkTypes)) {
             return false;
         }
-        return links.every((l) => l.includedQuantity === 0 || lookups.extras.get(l.extraId)?.isActive === true);
+        return drink.extras.every((e) => e.includedQuantity === 0 || lookups.extras.get(e.extraId)?.isActive === true);
     }
 
     private toView(drink: Drink, lookups: MenuLookups): DrinkWithPrice {
@@ -218,21 +210,20 @@ export class MenuService {
         if (!flavor) {
             throw new NotFoundError("DrinkFlavor", drink.drinkFlavorId);
         }
-        const links = lookups.extrasByDrink.get(drink.id) ?? [];
-        const includedExtras: IncludedExtra[] = links
-            .filter((l) => l.includedQuantity > 0)
-            .map((l) => {
-                const extra = lookups.extras.get(l.extraId);
+        const includedExtras: IncludedExtra[] = drink.extras
+            .filter((e) => e.includedQuantity > 0)
+            .map((e) => {
+                const extra = lookups.extras.get(e.extraId);
                 if (!extra) {
-                    throw new NotFoundError("Extra", l.extraId);
+                    throw new NotFoundError("Extra", e.extraId);
                 }
-                return { extraId: extra.id, name: extra.name, quantity: l.includedQuantity };
+                return { extraId: extra.id, name: extra.name, quantity: e.includedQuantity };
             });
 
         return {
             ...drink,
             priceCents: this.calculateDrinkPrice(type, flavor),
-            isAvailable: this.isAvailable(drink, type, flavor, links, lookups),
+            isAvailable: this.isAvailable(drink, type, flavor, lookups),
             drinkTypeName: type.name,
             drinkFlavorName: flavor.name,
             includedExtras,
@@ -242,25 +233,20 @@ export class MenuService {
     // The menu is small (tens of records per catalog), so reading each catalog whole is simple
     // and cheap. If it ever grows, the repositories can offer "find by ids" without changing this class's rules.
     private async loadLookups(): Promise<MenuLookups> {
-        const [types, flavors, sizes, milkTypes, extras, links] = await Promise.all([
+        const [types, flavors, sizes, milkTypes, extras] = await Promise.all([
             this.drinkTypes.findAll(),
             this.drinkFlavors.findAll(),
             this.sizes.findAll(),
             this.milkTypes.findAll(),
             this.extras.findAll(),
-            this.drinkExtras.findAll(),
         ]);
-        const extrasByDrink = new Map<string, DrinkExtra[]>();
-        for (const link of links) {
-            extrasByDrink.set(link.drinkId, [...(extrasByDrink.get(link.drinkId) ?? []), link]);
-        }
+
         return {
             types: new Map(types.map((t) => [t.id, t] as const)),
             flavors: new Map(flavors.map((f) => [f.id, f] as const)),
             sizes: new Map(sizes.map((s) => [s.id, s] as const)),
             milkTypes: new Map(milkTypes.map((m) => [m.id, m] as const)),
             extras: new Map(extras.map((e) => [e.id, e] as const)),
-            extrasByDrink,
         };
     }
 

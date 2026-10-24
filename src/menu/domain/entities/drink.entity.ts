@@ -1,3 +1,4 @@
+import { DrinkExtra } from "./drink-extra.entity";
 import { Product } from "./product.entity";
 
 /**
@@ -14,4 +15,5 @@ export interface Drink extends Product {
     allowedSizeIds: string[];
     allowedMilkTypeIds: string[];
     allowedSweetenerIds: string[];
+    extras: DrinkExtra[];
 }

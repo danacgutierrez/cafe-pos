@@ -57,4 +57,8 @@ export class InMemoryDrinkRepository implements DrinkRepository {
     async existsByAllowedSweetenerId(sweetenerId: string): Promise<boolean> {
         return [...this.data.values()].some((d) => d.allowedSweetenerIds.includes(sweetenerId));
     }
+
+    async existsByExtraId(extraId: string): Promise<boolean> {
+        return [...this.data.values()].some((d) => d.extras.some((e) => e.extraId === extraId));
+    }
 }

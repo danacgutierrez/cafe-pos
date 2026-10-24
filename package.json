@@ -2,7 +2,7 @@
   "name": "cafepos-domain",
   "version": "1.0.0",
   "description": "",
-  "private": "true",
+  "private": true,
   "scripts": {
     "dev": "tsx src/scenarios/index.ts",
     "typecheck": "tsc --noEmit"
