@@ -12,14 +12,43 @@ export class DuplicateDrinkError extends DomainError {
 // customer could try to order that's been turned off.
 export class InactiveOptionError extends DomainError {
     constructor(optionType: string, id: string) {
-        super(`The ${optionType} "${id}" is not active and cannot be ordered`);
+        super(`The ${optionType} "${id}" is not active and cannot be used`);
     }
 }
 
-// hard delete is blocked once something has real orders; deactivation is the only
-// supported way to remove it from the menu after that point.
+// hard delete is blocked while something else still depends on the record
+// (a drink that uses it, or a past order); deactivation is the supported way
+// to remove it from the menu after that point.
 export class InUseError extends DomainError {
     constructor(entityType: string, id: string) {
-        super(`Cannot delete ${entityType} "${id}" because it already has orders; deactivate it instead`);
+        super(`Cannot delete ${entityType} "${id}" because it is still in use; deactivate it instead`);
+    }
+}
+
+// a drink with no size could never be ordered, so it is not allowed to exist.
+export class DrinkWithoutSizesError extends DomainError {
+    constructor() {
+        super("A drink must offer at least one size");
+    }
+}
+
+// the sweetness order must be unambiguous, so two sweeteners cannot share a level.
+export class DuplicateSweetenerLevelError extends DomainError {
+    constructor(readonly level: number) {
+        super(`A sweetener with level ${level} already exists`);
+    }
+}
+
+// the units of an extra on a drink can never go over that extra's maximum.
+export class ExtraQuantityExceededError extends DomainError {
+    constructor(extraId: string, total: number, maxQuantity: number) {
+        super(`The extra "${extraId}" would have ${total} units, but the maximum is ${maxQuantity}`);
+    }
+}
+
+// the total price of a drink must be greater than zero and not exceed the technical limit.
+export class PriceOutOfRangeError extends DomainError {
+    constructor(priceCents: number) {
+        super(`The total price of ${priceCents} cents must be greater than 0 and at most the allowed maximum`);
     }
 }

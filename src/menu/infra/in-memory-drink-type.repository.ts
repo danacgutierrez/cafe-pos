@@ -18,6 +18,10 @@ export class InMemoryDrinkTypeRepository implements DrinkTypeRepository {
         return { ...entity };
     }
 
+    async delete(id: string): Promise<void> {
+        this.data.delete(id);
+    }
+
     async findByName(name: string): Promise<DrinkType | null> {
         const found = [...this.data.values()].find(
             (d) => d.name.toLowerCase() === name.toLowerCase(),

@@ -1,226 +1,303 @@
 import { randomUUID } from "crypto"
 import { DrinkType } from "./domain/entities/drink-type.entity"
-import { DrinkFlavorRepository } from "./domain/repositories/drink-flavor.repository"
-import { DrinkTypeRepository } from "./domain/repositories/drink-type.repository"
-import { DrinkRepository } from "./domain/repositories/drink.repository"
 import { DrinkFlavor } from "./domain/entities/drink-flavor.entity"
 import { Drink } from "./domain/entities/drink.entity"
+import { Size } from "./domain/entities/size.entity"
+import { MilkType } from "./domain/entities/milk-type.entity"
+import { Extra } from "./domain/entities/extra.entity"
+import { DrinkRepository } from "./domain/repositories/drink.repository"
+import { DrinkTypeRepository } from "./domain/repositories/drink-type.repository"
+import { DrinkFlavorRepository } from "./domain/repositories/drink-flavor.repository"
+import { SizeRepository } from "./domain/repositories/size.repository"
+import { MilkTypeRepository } from "./domain/repositories/milk-type.repository"
+import { SweetenerRepository } from "./domain/repositories/sweetener.repository"
+import { ExtraRepository } from "./domain/repositories/extra.repository"
+import { CreateDrinkInput } from "./domain/models/create-drink-input"
+import { DrinkWithPrice, IncludedExtra } from "./domain/models/drink-with-price"
 import { InvalidInputError } from "../shared/invalid-input-error"
 import { DuplicateNameError } from "../shared/duplicate-name-error"
 import { NotFoundError } from "../shared/not-found-error"
-import { DuplicateDrinkError, InactiveOptionError } from "./domain/errors"
-import { DESCRIPTION_MAX_LENGTH, IMAGE_URL_MAX_LENGTH, MAX_PRICE_CENTS, NAME_MAX_LENGTH } from "./domain/limits"
+import {
+    DrinkWithoutSizesError,
+    DuplicateDrinkError,
+    ExtraQuantityExceededError,
+    InactiveOptionError,
+} from "./domain/errors"
+import { DESCRIPTION_MAX_LENGTH, IMAGE_URL_MAX_LENGTH, MAX_EXTRA_QUANTITY } from "./domain/limits"
+import { DrinkExtra } from "./domain/entities/drink-extra.entity"
+import { DrinkExtraRepository } from "./domain/repositories/drink-extra.repository"
+import { assertIntegerInRange, assertNoRepeats, assertValidTotalPrice, normalizeName } from "./domain/validation"
+import { setActive } from "./domain/activation"
 
-/** The minimum a repository must offer to be activated or deactivated. */
-interface ActivatableRepository<T extends { id: string; isActive: boolean }> {
-    findById(id: string): Promise<T | null>;
-    save(entity: T): Promise<T>;
+/** Everything the menu needs to price drinks and decide their availability, loaded once per query. */
+interface MenuLookups {
+    types: Map<string, DrinkType>;
+    flavors: Map<string, DrinkFlavor>;
+    sizes: Map<string, Size>;
+    milkTypes: Map<string, MilkType>;
+    extras: Map<string, Extra>;
+    extrasByDrink: Map<string, DrinkExtra[]>;
 }
 
+/**
+ * Drinks: creating them with the options they allow, turning them on/off,
+ * deleting them and reading them with their price and availability.
+ * The catalogs a drink is built from are handled by MenuOptionsService.
+ */
 export class MenuService {
     constructor(
         private readonly drinks: DrinkRepository,
         private readonly drinkTypes: DrinkTypeRepository,
         private readonly drinkFlavors: DrinkFlavorRepository,
+        private readonly sizes: SizeRepository,
+        private readonly milkTypes: MilkTypeRepository,
+        private readonly sweeteners: SweetenerRepository,
+        private readonly extras: ExtraRepository,
+        private readonly drinkExtras: DrinkExtraRepository,
     ) { }
 
-    async activateDrinkType(id: string): Promise<DrinkType> {
-        return this.setActive(this.drinkTypes, "DrinkType", id, true);
-    }
+    /** -------------------------------------------- DRINKS -------------------------------------------- */
 
-    async deactivateDrinkType(id: string): Promise<DrinkType> {
-        return this.setActive(this.drinkTypes, "DrinkType", id, false);
-    }
-
-    async activateDrinkFlavor(id: string): Promise<DrinkFlavor> {
-        return this.setActive(this.drinkFlavors, "DrinkFlavor", id, true);
-    }
-
-    async deactivateDrinkFlavor(id: string): Promise<DrinkFlavor> {
-        return this.setActive(this.drinkFlavors, "DrinkFlavor", id, false);
-    }
-
-    /** A drink can only be activated while its type and flavor are active. */
-    async activateDrink(id: string): Promise<Drink> {
-        const drink = await this.drinks.findById(id);
-        if (!drink) {
-            throw new NotFoundError("Drink", id);
-        }
-        if (drink.isActive) {
-            return drink;
-        }
-
-        const type = await this.drinkTypes.findById(drink.drinkTypeId);
-        if (!type) {
-            throw new NotFoundError("DrinkType", drink.drinkTypeId);
-        }
-        if (!type.isActive) {
-            throw new InactiveOptionError("DrinkType", type.id);
-        }
-
-        const flavor = await this.drinkFlavors.findById(drink.drinkFlavorId);
-        if (!flavor) {
-            throw new NotFoundError("DrinkFlavor", drink.drinkFlavorId);
-        }
-        if (!flavor.isActive) {
-            throw new InactiveOptionError("DrinkFlavor", flavor.id);
-        }
-
-        return this.drinks.save({ ...drink, isActive: true });
-    }
-
-    async deactivateDrink(id: string): Promise<Drink> {
-        return this.setActive(this.drinks, "Drink", id, false);
-    }
-
-    async createDrinkType(name: string, priceCents: number): Promise<DrinkType> {
-
-        const normalizedName = this.normalizeName(name);
-        this.assertValidPrice(priceCents);
-
-        const existing = await this.drinkTypes.findByName(normalizedName);
-        if (existing) {
-            throw new DuplicateNameError("DrinkType", normalizedName);
-        }
-
-        return this.drinkTypes.save({ id: randomUUID(), name: normalizedName, isActive: true, priceCents });
-    }
-
-    async createDrinkFlavor(name: string, priceCents: number): Promise<DrinkFlavor> {
-        const normalizedName = this.normalizeName(name);
-        this.assertValidPrice(priceCents);
-
-        const existing = await this.drinkFlavors.findByName(normalizedName);
-        if (existing) {
-            throw new DuplicateNameError("DrinkFlavor", normalizedName);
-        }
-
-        return this.drinkFlavors.save({ id: randomUUID(), name: normalizedName, isActive: true, priceCents });
-    }
-
-    async createDrink(name: string, description: string, drinkTypeId: string, drinkFlavorId: string, imageUrl?: string): Promise<Drink> {
-        const normalizedName = this.normalizeName(name);
-        description = description.trim();
+    async createDrink(input: CreateDrinkInput): Promise<DrinkWithPrice> {
+        const normalizedName = normalizeName(input.name);
+        const description = input.description.trim();
+        const sizeIds = input.sizeIds;
+        const milkTypeIds = input.milkTypeIds ?? [];
+        const sweetenerIds = input.sweetenerIds ?? [];
+        const extraInputs = input.extras ?? [];
 
         if (description === "" || description.length > DESCRIPTION_MAX_LENGTH) {
             throw new InvalidInputError("description", `cannot be empty or longer than ${DESCRIPTION_MAX_LENGTH} characters`);
         }
+        const imageUrl = this.cleanImageUrl(input.imageUrl);
 
-        const cleanImageUrl = imageUrl?.trim() || undefined;
-        if (cleanImageUrl !== undefined) {
-            if (cleanImageUrl.length > IMAGE_URL_MAX_LENGTH) {
-                throw new InvalidInputError("imageUrl", `must be at most ${IMAGE_URL_MAX_LENGTH} characters`);
+        assertNoRepeats("sizeIds", sizeIds);
+        assertNoRepeats("milkTypeIds", milkTypeIds);
+        assertNoRepeats("sweetenerIds", sweetenerIds);
+        assertNoRepeats("extras", extraInputs.map((e) => e.extraId));
+        for (const extra of extraInputs) {
+            assertIntegerInRange("includedQuantity", extra.includedQuantity, 0, MAX_EXTRA_QUANTITY);
+        }
+
+        if (sizeIds.length === 0) {
+            throw new DrinkWithoutSizesError();
+        }
+
+        // Everything the drink points to must exist and be active.
+        const type = await this.requireActive(this.drinkTypes, "DrinkType", input.drinkTypeId);
+        const flavor = await this.requireActive(this.drinkFlavors, "DrinkFlavor", input.drinkFlavorId);
+        for (const id of sizeIds) {
+            await this.requireActive(this.sizes, "Size", id);
+        }
+        for (const id of milkTypeIds) {
+            await this.requireActive(this.milkTypes, "MilkType", id);
+        }
+        for (const id of sweetenerIds) {
+            await this.requireActive(this.sweeteners, "Sweetener", id);
+        }
+        for (const item of extraInputs) {
+            const extra = await this.requireActive(this.extras, "Extra", item.extraId);
+            if (item.includedQuantity > extra.maxQuantity) {
+                throw new ExtraQuantityExceededError(extra.id, item.includedQuantity, extra.maxQuantity);
             }
-            let parsed: URL;
-            try {
-                parsed = new URL(cleanImageUrl);
-            } catch {
-                throw new InvalidInputError("imageUrl", "must be a valid URL");
-            }
-            if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-                throw new InvalidInputError("imageUrl", "must use http or https");
-            }
         }
 
-        const existingType = await this.drinkTypes.findById(drinkTypeId);
-        if (!existingType) {
-            throw new NotFoundError("DrinkType", drinkTypeId);
-        }
-
-        if (!existingType.isActive) {
-            throw new InactiveOptionError("DrinkType", drinkTypeId);
-        }
-
-        const existingFlavor = await this.drinkFlavors.findById(drinkFlavorId);
-        if (!existingFlavor) {
-            throw new NotFoundError("DrinkFlavor", drinkFlavorId);
-        }
-
-        if (!existingFlavor.isActive) {
-            throw new InactiveOptionError("DrinkFlavor", drinkFlavorId);
-        }
-
-        const existingDrinkName = await this.drinks.findByName(normalizedName);
-        if (existingDrinkName) {
+        if (await this.drinks.findByName(normalizedName)) {
             throw new DuplicateNameError("Drink", normalizedName);
         }
-
-        const existingDrink = await this.drinks.findByTypeAndFlavor(drinkTypeId, drinkFlavorId);
-        if (existingDrink) {
-            throw new DuplicateDrinkError(drinkTypeId, drinkFlavorId);
+        if (await this.drinks.findByTypeAndFlavor(type.id, flavor.id)) {
+            throw new DuplicateDrinkError(type.id, flavor.id);
         }
 
-        const priceCents = existingType.priceCents + existingFlavor.priceCents;
+        assertValidTotalPrice(this.calculateDrinkPrice(type, flavor));
 
-
-        return this.drinks.save({ id: randomUUID(), name: normalizedName, priceCents, description, isActive: true, imageUrl: cleanImageUrl, drinkTypeId, drinkFlavorId });
-    }
-
-    /** Drinks that can really be ordered: the drink, its type and its flavor are all active. */
-    async listAvailableDrinks(): Promise<Drink[]> {
-        const [drinks, types, flavors] = await Promise.all([
-            this.drinks.findAll(),
-            this.drinkTypes.findAll(),
-            this.drinkFlavors.findAll(),
-        ]);
-        const typesById = new Map(types.map((t) => [t.id, t] as const));
-        const flavorsById = new Map(flavors.map((f) => [f.id, f] as const));
-
-        return drinks.filter((drink) =>
-            this.isAvailable(drink, typesById.get(drink.drinkTypeId), flavorsById.get(drink.drinkFlavorId)),
+        const drink = await this.drinks.save({
+            id: randomUUID(),
+            name: normalizedName,
+            description,
+            isActive: true,
+            imageUrl,
+            drinkTypeId: type.id,
+            drinkFlavorId: flavor.id,
+            allowedSizeIds: [...sizeIds],
+            allowedMilkTypeIds: [...milkTypeIds],
+            allowedSweetenerIds: [...sweetenerIds],
+        });
+        await this.drinkExtras.saveAll(
+            drink.id,
+            extraInputs.map((e) => ({ drinkId: drink.id, extraId: e.extraId, includedQuantity: e.includedQuantity })),
         );
+
+        return this.getDrink(drink.id);
     }
 
+    async getDrink(id: string): Promise<DrinkWithPrice> {
+        const drink = await this.drinks.findById(id);
+        if (!drink) {
+            throw new NotFoundError("Drink", id);
+        }
+        return this.toView(drink, await this.loadLookups());
+    }
+
+    /** Every drink, available or not (for the administrator). */
+    async listDrinks(): Promise<DrinkWithPrice[]> {
+        const [drinks, lookups] = await Promise.all([this.drinks.findAll(), this.loadLookups()]);
+        return drinks.map((drink) => this.toView(drink, lookups));
+    }
+
+    /** Drinks that can really be ordered (for the customer). */
+    async listAvailableDrinks(): Promise<DrinkWithPrice[]> {
+        const all = await this.listDrinks();
+        return all.filter((drink) => drink.isAvailable);
+    }
+
+    /** A drink can only be activated while its type and flavor are active. */
+    async activateDrink(id: string): Promise<DrinkWithPrice> {
+        const drink = await this.drinks.findById(id);
+        if (!drink) {
+            throw new NotFoundError("Drink", id);
+        }
+        if (!drink.isActive) {
+            await this.requireActive(this.drinkTypes, "DrinkType", drink.drinkTypeId);
+            await this.requireActive(this.drinkFlavors, "DrinkFlavor", drink.drinkFlavorId);
+            await this.drinks.save({ ...drink, isActive: true });
+        }
+        return this.getDrink(id);
+    }
+
+    async deactivateDrink(id: string): Promise<DrinkWithPrice> {
+        await setActive(this.drinks, "Drink", id, false);
+        return this.getDrink(id);
+    }
+
+    /** Deleting a drink also deletes its list of extras, which has no meaning without it. */
+    async deleteDrink(id: string): Promise<void> {
+        if (!(await this.drinks.findById(id))) {
+            throw new NotFoundError("Drink", id);
+        }
+        // The "it already appeared in an order" check goes here once the Orders module exists.
+        await this.drinkExtras.deleteByDrinkId(id);
+        await this.drinks.delete(id);
+    }
 
     /** -------------------------------------------- HELPERS -------------------------------------------- */
-    private async setActive<T extends { id: string; isActive: boolean }>(
-        repository: ActivatableRepository<T>,
+
+    /** The single place that defines the price of a drink. */
+    private calculateDrinkPrice(type: DrinkType, flavor: DrinkFlavor): number {
+        return type.priceCents + flavor.priceCents;
+    }
+
+    /**
+     * The single place that defines when a drink is available: it, its type and its flavor
+     * are active, it has an active size, an active milk when it offers milk,
+     * and every extra it includes is active.
+     */
+    private isAvailable(drink: Drink, type: DrinkType, flavor: DrinkFlavor, links: DrinkExtra[], lookups: MenuLookups): boolean {
+        if (!drink.isActive || !type.isActive || !flavor.isActive) {
+            return false;
+        }
+        const hasActive = (ids: string[], catalog: Map<string, { isActive: boolean }>) =>
+            ids.some((id) => catalog.get(id)?.isActive === true);
+
+        if (!hasActive(drink.allowedSizeIds, lookups.sizes)) {
+            return false;
+        }
+        if (drink.allowedMilkTypeIds.length > 0 && !hasActive(drink.allowedMilkTypeIds, lookups.milkTypes)) {
+            return false;
+        }
+        return links.every((l) => l.includedQuantity === 0 || lookups.extras.get(l.extraId)?.isActive === true);
+    }
+
+    private toView(drink: Drink, lookups: MenuLookups): DrinkWithPrice {
+        // Deleting is blocked while something uses a record, so a missing one means corrupted data.
+        const type = lookups.types.get(drink.drinkTypeId);
+        if (!type) {
+            throw new NotFoundError("DrinkType", drink.drinkTypeId);
+        }
+        const flavor = lookups.flavors.get(drink.drinkFlavorId);
+        if (!flavor) {
+            throw new NotFoundError("DrinkFlavor", drink.drinkFlavorId);
+        }
+        const links = lookups.extrasByDrink.get(drink.id) ?? [];
+        const includedExtras: IncludedExtra[] = links
+            .filter((l) => l.includedQuantity > 0)
+            .map((l) => {
+                const extra = lookups.extras.get(l.extraId);
+                if (!extra) {
+                    throw new NotFoundError("Extra", l.extraId);
+                }
+                return { extraId: extra.id, name: extra.name, quantity: l.includedQuantity };
+            });
+
+        return {
+            ...drink,
+            priceCents: this.calculateDrinkPrice(type, flavor),
+            isAvailable: this.isAvailable(drink, type, flavor, links, lookups),
+            drinkTypeName: type.name,
+            drinkFlavorName: flavor.name,
+            includedExtras,
+        };
+    }
+
+    // The menu is small (tens of records per catalog), so reading each catalog whole is simple
+    // and cheap. If it ever grows, the repositories can offer "find by ids" without changing this class's rules.
+    private async loadLookups(): Promise<MenuLookups> {
+        const [types, flavors, sizes, milkTypes, extras, links] = await Promise.all([
+            this.drinkTypes.findAll(),
+            this.drinkFlavors.findAll(),
+            this.sizes.findAll(),
+            this.milkTypes.findAll(),
+            this.extras.findAll(),
+            this.drinkExtras.findAll(),
+        ]);
+        const extrasByDrink = new Map<string, DrinkExtra[]>();
+        for (const link of links) {
+            extrasByDrink.set(link.drinkId, [...(extrasByDrink.get(link.drinkId) ?? []), link]);
+        }
+        return {
+            types: new Map(types.map((t) => [t.id, t] as const)),
+            flavors: new Map(flavors.map((f) => [f.id, f] as const)),
+            sizes: new Map(sizes.map((s) => [s.id, s] as const)),
+            milkTypes: new Map(milkTypes.map((m) => [m.id, m] as const)),
+            extras: new Map(extras.map((e) => [e.id, e] as const)),
+            extrasByDrink,
+        };
+    }
+
+    /** Finds a record that must exist AND be active. */
+    private async requireActive<T extends { id: string; isActive: boolean }>(
+        repository: { findById(id: string): Promise<T | null> },
         entityName: string,
         id: string,
-        isActive: boolean,
     ): Promise<T> {
         const entity = await repository.findById(id);
         if (!entity) {
             throw new NotFoundError(entityName, id);
         }
-        if (entity.isActive === isActive) {
-            return entity;
+        if (!entity.isActive) {
+            throw new InactiveOptionError(entityName, id);
         }
-        return repository.save({ ...entity, isActive });
+        return entity;
     }
 
-    /** The single place that defines when a drink is available. */
-    private isAvailable(
-        drink: Drink,
-        type: DrinkType | undefined,
-        flavor: DrinkFlavor | undefined,
-    ): boolean {
-        return drink.isActive && type?.isActive === true && flavor?.isActive === true;
-    }
-
-    private normalizeName(name: string): string {
-        const clean = name.normalize("NFC").trim().replace(/\s+/g, " ");
-
-        if (clean === "") {
-            throw new InvalidInputError("name", "cannot be empty");
+    /** Blank means "no image". Only https addresses are accepted. */
+    private cleanImageUrl(imageUrl: string | undefined): string | undefined {
+        const clean = imageUrl?.trim() || undefined;
+        if (clean === undefined) {
+            return undefined;
         }
-        if (clean.length > NAME_MAX_LENGTH) {
-            throw new InvalidInputError("name", `cannot be longer than ${NAME_MAX_LENGTH} characters`);
+        if (clean.length > IMAGE_URL_MAX_LENGTH) {
+            throw new InvalidInputError("imageUrl", `must be at most ${IMAGE_URL_MAX_LENGTH} characters`);
         }
-
+        let parsed: URL;
+        try {
+            parsed = new URL(clean);
+        } catch {
+            throw new InvalidInputError("imageUrl", "must be a valid URL");
+        }
+        if (parsed.protocol !== "https:") {
+            throw new InvalidInputError("imageUrl", "must use https");
+        }
         return clean;
     }
-
-    private assertValidPrice(priceCents: number): void {
-        if (!Number.isInteger(priceCents)) {
-            throw new InvalidInputError("priceCents", "must be a whole number of cents");
-        }
-        if (priceCents < 0) {
-            throw new InvalidInputError("priceCents", "cannot be negative");
-        }
-        if (priceCents > MAX_PRICE_CENTS) {
-            throw new InvalidInputError("priceCents", `cannot exceed ${MAX_PRICE_CENTS} cents`);
-        }
-    }
-
 }

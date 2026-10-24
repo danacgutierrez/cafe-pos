@@ -21,5 +21,8 @@ export class InMemoryDrinkFlavorRepository implements DrinkFlavorRepository {
         this.data.set(entity.id, { ...entity });
         return { ...entity };
     }
+    async delete(id: string): Promise<void> {
+        this.data.delete(id);
+    }
 
 }

@@ -4,7 +4,7 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "dev": "tsx src/scenarios.ts",
+    "dev": "tsx src/scenarios/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

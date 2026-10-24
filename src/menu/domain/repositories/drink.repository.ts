@@ -4,9 +4,13 @@ import { Drink } from "../entities/drink.entity";
 export interface DrinkRepository extends Repository<Drink> {
     findByTypeAndFlavor(drinkTypeId: string, flavorId: string): Promise<Drink | null>;
 
-    // Separate from findAll() on purpose: this is the query the customer-facing catalog actually
-    // uses often, so it's explicit here instead of always filtering findAll() in the service.
-    findActive(): Promise<Drink[]>;
-
     findByName(name: string): Promise<Drink | null>;
+
+    // "Is anything using this?" questions, asked before deleting an option.
+    // They return a boolean on purpose: the real database can answer with a cheap COUNT.
+    existsByDrinkTypeId(drinkTypeId: string): Promise<boolean>;
+    existsByDrinkFlavorId(drinkFlavorId: string): Promise<boolean>;
+    existsByAllowedSizeId(sizeId: string): Promise<boolean>;
+    existsByAllowedMilkTypeId(milkTypeId: string): Promise<boolean>;
+    existsByAllowedSweetenerId(sweetenerId: string): Promise<boolean>;
 }
