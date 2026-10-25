@@ -24,15 +24,28 @@ async function main() {
 
   await prisma.product.createMany({
     data: [
-      { id: 1, name: 'Hamburguesa Clásica', price: 8.5, description: '', isActive: true },
-      { id: 2, name: 'Papas Fritas', price: 3.0, description: '', isActive: true },
-      { id: 3, name: 'Bebida Mediana', price: 2.0, description: '', isActive: true },
+      { id: 1, name: 'Frappe', price: 8.5, description: '', isActive: true },
+      { id: 2, name: 'Café americano', price: 3.0, description: '', isActive: true },
+      { id: 3, name: 'Matcha', price: 2.0, description: '', isActive: true },
     ],
+  });
+
+  await prisma.loyaltyProgram.create({
+    data: {
+      id: 1,
+      name: 'Cliente Frecuente',
+      isActive: true,
+      earnMode: 'PER_ORDER',
+      earnValue: 1,
+      redeemMode: 'FREE_ITEM',
+      pointsPerReward: 9,
+      pointValue: 0,
+    },
   });
 
   await prisma.client.createMany({
     data: [
-      { id: 1, firstName: 'Karla', lastName: 'Duarte', loyaltyBalance: 0, phoneNumber: '1' },
+      { id: 1, firstName: 'Karla', lastName: 'Duarte', loyaltyBalance: 10, phoneNumber: '1' },
       { id: 2, firstName: 'Sofia', lastName: 'Ibarra', loyaltyBalance: 0, phoneNumber: '2' },
     ],
   });
@@ -47,8 +60,27 @@ async function main() {
     ],
   });
 
+  await prisma.order.create({
+    data: {
+      id: 1,
+      idClient: 1,
+      scheduleTime: new Date(),
+      total: 19.0, 
+      deliveryMode: 'PICKUP',
+      fulfillmentType: 'IMMEDIATE',
+      status: 'PENDING',
+      orderDetails: {
+        create: [
+          { idProduct: 1, quantity: 2, price: 8.5 },
+          { idProduct: 3, quantity: 1, price: 2.0 },
+        ],
+      },
+    },
+  });
+
   console.log(
     `Seed listo: ${await prisma.product.count()} productos, ` +
+    `${await prisma.loyaltyProgram.count()} programas, ` +
     `${await prisma.client.count()} clientes, ` +
     `${await prisma.usuario.count()} usuarios.`
   );

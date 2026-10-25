@@ -8,6 +8,7 @@ import {
   IsString,
   IsDateString,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateOrderDetailDto } from './create-order-detail.dto';
@@ -46,4 +47,13 @@ export class CreateOrderDto {
   @IsPositive()
   @IsOptional()
   idLoyaltyTransaction?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  usePoints?: boolean;
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  rewardProductId?: number;
 }

@@ -27,8 +27,9 @@ model Client {
   loyaltyBalance Float  @default(0)
   phoneNumber    String @db.VarChar(20)
 
-  orders  Order[]
-  usuario Usuario?
+  orders              Order[]
+  usuario             Usuario?
+  loyaltyTransactions LoyaltyTransaction[]
 
   @@map("clients")
 }
@@ -47,8 +48,8 @@ model Order {
   deliveryFee Float    @default(0)
   createdAt   DateTime @default(now())
 
-  idClient             Int
-  idLoyaltyTransaction Int?
+  idClient            Int
+  loyaltyTransactions LoyaltyTransaction[]
 
   client       Client        @relation(fields: [idClient], references: [id])
   orderDetails OrderDetail[]
@@ -83,4 +84,43 @@ model Usuario {
   client       Client?  @relation(fields: [idClient], references: [id])
 
   @@map("usuarios")
+}
+
+model LoyaltyProgram {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+
+  earnMode  String @db.VarChar(20) // Aquí guardará "PER_ORDER" o "AMOUNT_SPENT"
+  earnValue Float
+
+  redeemMode      String @db.VarChar(20) // Aquí guardará "DISCOUNT" o "FREE_ITEM"
+  pointsPerReward Float
+  pointValue      Float
+
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@map("loyalty_programs")
+}
+
+model LoyaltyTransaction {
+  id              Int      @id @default(autoincrement())
+  pointsEarned    Float
+  balanceAfter    Float
+  transactionType String   @db.VarChar(20) // Aquí guardará "EARN" o "REDEEM"
+  createdAt       DateTime @default(now())
+
+  idClient         Int
+  idLoyaltyProgram Int
+  idOrder          Int?
+
+  client         Client         @relation(fields: [idClient], references: [id])
+  loyaltyProgram LoyaltyProgram @relation(fields: [idLoyaltyProgram], references: [id])
+  order          Order?         @relation(fields: [idOrder], references: [id])
+
+  @@index([idClient])
+  @@index([idLoyaltyProgram])
+  @@index([idOrder])
+  @@map("loyalty_transactions")
 }

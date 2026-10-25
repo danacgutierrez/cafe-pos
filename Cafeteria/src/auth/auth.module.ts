@@ -6,8 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { USUARIO_REPOSITORY } from './dominio/usuario.repository';
-import { UsuarioMemoriaRepository } from './infra/usuario-memoria.repository';
-//import { UsuarioPrismaRepository } from './infra/usuario-prisma.repository'; // Paso 7
+import { UsuarioPrismaRepository } from './infra/usuario-prisma.repository';
 
 @Module({
   imports: [
@@ -24,7 +23,7 @@ import { UsuarioMemoriaRepository } from './infra/usuario-memoria.repository';
     JwtStrategy, // si falta aqui: Unknown authentication strategy "jwt"
     // Paso 7: la UNICA linea que cambio. Antes: UsuarioMemoriaRepository.
     // El AuthService no se entero.
-    { provide: USUARIO_REPOSITORY, useClass: UsuarioMemoriaRepository },
+    { provide: USUARIO_REPOSITORY, useClass: UsuarioPrismaRepository },
   ],
 })
 export class AuthModule {}

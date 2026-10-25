@@ -15,7 +15,10 @@ import {
   DomainError,
   EmptyOrderError,
   InactiveProductError,
-  NonExistentProductError
+  InvalidOrderStatusError,
+  InvalidPointsToEarn,
+  NonExistentProductError,
+  NonOrderFoundError
 } from 'src/ordenes/dominio/errores';
 
 // Atrapa ErrorDeDominio y TODAS sus hijas. Los demas errores (un 400 del
@@ -30,14 +33,19 @@ export class DominioExceptionFilter implements ExceptionFilter {
     // Lo que no existe -> 404
     if (
       error instanceof EmptyOrderError ||
-      error instanceof InactiveProductError
+      error instanceof InactiveProductError ||
+      error instanceof NonOrderFoundError
     ) {
       return HttpStatus.NOT_FOUND;
     }
 
-    if (error instanceof NonExistentProductError) {
+    if (error instanceof NonExistentProductError ||
+        error instanceof InvalidOrderStatusError ||
+        error instanceof InvalidPointsToEarn
+    ) {
       return HttpStatus.CONFLICT;
     }
+
     // Un error de dominio que olvidamos mapear -> 500, para que se note.
     return HttpStatus.INTERNAL_SERVER_ERROR;
   }

@@ -15,14 +15,29 @@ export enum FulfillmentType {
     SCHEDULED = 'SCHEDULED'
 }
 
+export enum EarnMode {
+    PER_ORDER = 'PER_ORDER',
+    AMOUNT_SPENT = 'AMOUNT_SPENT'
+}
+
+export enum RedeemMode {
+    DISCOUNT = 'DISCOUNT',
+    FREE_ITEM = 'FREE_ITEM'
+}
+
+export enum TransactionType {
+    EARN = 'EARN',
+    REDEEM = 'REDEEM'
+}
+
 export class Order {
     id!: number;
     scheduleTime!: Date;
-    notes!: string;
+    notes?: string;
     total!: number;
-    deliveryNotes!: string;
+    deliveryNotes?: string;
     deliveryMode!: DeliveryMode;
-    deliveryFee!: number;
+    deliveryFee?: number;
     status!: OrderStatus;
     fulfillmentType!: FulfillmentType;
     createdAt!: Date;
@@ -31,6 +46,7 @@ export class Order {
     idClient!: number;
     idLoyaltyTransaction?: number;
     orderDetails!: OrderDetail[];
+    loyaltyTransactions?: LoyaltyTransaction[];
 }
 
 export abstract class OrderDetail {
@@ -44,3 +60,33 @@ export abstract class OrderDetail {
 }
 
 export type NewOrder = Omit<Order, 'id' | 'createdAt' | 'status'>;
+
+export class LoyaltyProgram {
+    id!: number;
+    name!: string;
+    updatedAt!: Date;
+    isActive!: boolean;
+    earnMode!: EarnMode;
+    earnValue!: number;
+    redeemMode!: RedeemMode;
+    pointsPerReward!: number;
+    pointValue!: number;
+    
+    // Relaciones
+    //loyaltyTransactions!: LoyaltyTransaction[];
+}
+
+export class LoyaltyTransaction {
+    id!: number;
+    pointsEarned!: number;
+    balanceAfter!: number;
+    transactionType!: TransactionType;
+    createdAt!: Date;
+    
+    // Relaciones
+    idClient!: number;
+    idOrder!: number;
+    idLoyaltyProgram!: number;
+}
+
+export type NewLoyaltyTransaction = Omit<LoyaltyTransaction, 'id' | 'createdAt' | 'idOrder'>;

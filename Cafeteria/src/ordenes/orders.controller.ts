@@ -1,16 +1,16 @@
 import {
   Body,
   Controller,
-  Delete,
-  ForbiddenException, // NUEVO (Paso 5): el 403
+  ForbiddenException,
   Get,
   HttpCode,
   NotFoundException,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   Res,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { Rol, type PayloadJwt } from '../auth/dominio/usuario';
 import { Roles } from 'src/auth/decoradores/roles.decorator';
@@ -27,7 +27,6 @@ export class OrdersController {
     async create(
         @Body() dto: CreateOrderDto,
         @UsuarioActual() usuario: PayloadJwt,
-        @Res({ passthrough: true }) res: Response,
     ) { 
         if (usuario.idClient !== dto.idClient) {
             throw new ForbiddenException('Solo puedes ordenar para ti mismo');
@@ -43,5 +42,39 @@ export class OrdersController {
     async findAll() {
         const lista = await this.service.findAll();
         return lista.map(toOrderDto);
+    }
+
+    @Patch(':id/cancel')
+    async cancel(
+        @Param('id', ParseIntPipe) id: number,
+        @UsuarioActual() usuario: PayloadJwt
+    ) {
+        const orderToCancel = await this.service.findById(id);
+
+        if (!orderToCancel) {
+            throw new NotFoundException(`La orden con id ${id} no fue encontrada`);
+        }
+
+        if (usuario.rol !== 'admin' && usuario.idClient !== orderToCancel.idClient) {
+            throw new ForbiddenException('Solo puedes cancelar tus propias órdenes');
+        }
+
+        const order = await this.service.cancel(id);
+
+        return toOrderDto(order!);
+    }
+
+    @Roles(Rol.admin)
+    @Patch(':id/complete')
+    async complete(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        const order = await this.service.complete(id);
+
+        if (!order) {
+            throw new NotFoundException(`La orden con id ${id} no fue encontrada`);
+        }
+
+        return toOrderDto(order);
     }
 }

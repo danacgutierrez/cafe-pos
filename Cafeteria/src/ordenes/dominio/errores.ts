@@ -22,3 +22,28 @@ export class NonExistentProductError extends DomainError {
         super(`El producto no existe en el catálogo.`);
     }
 }
+
+export class InvalidOrderStatusError extends DomainError {
+    constructor() {
+        super(`No es posible modificar el status de la orden.`);
+    }
+}
+
+export class NonOrderFoundError extends DomainError {
+    constructor() {
+        super(`Orden no encontrada.`);
+    }
+}
+
+export class InvalidPointsToEarn extends DomainError {
+    constructor() {
+        super(`Puntos de entrega invalidos.`);
+    }
+}
+
+export class NonClientFoundError extends DomainError {
+    constructor() {
+        super(`Cliente no encontrado.`);
+    }
+}
+

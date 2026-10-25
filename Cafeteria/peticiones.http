@@ -16,7 +16,7 @@ Content-Type: application/json
 POST {{host}}/auth/login
 Content-Type: application/json
 
-{ "correo": "karla@itson.mx", "password": "gimnasio2026" }
+{ "correo": "karla@itson.mx", "password": "cafeteria2026" }
 
 ###
 @tokenKarla = {{loginKarla.response.body.data.access_token}}
@@ -38,7 +38,7 @@ Authorization: Bearer {{tokenKarla}}
 {
   "idClient": 1,
   "scheduleTime": "2026-10-21T15:30:00Z",
-  "notes": "Sin cebolla por favor",
+  "notes": "Sin miel",
   "deliveryMode": "DELIVERY",
   "fulfillmentType": "IMMEDIATE",
   "details": [
@@ -90,21 +90,67 @@ Authorization: Bearer {{tokenKarla}}
   ]
 }
 
+### 9. Cancelar orden exitosamente siendo el dueño (200 OK)
+PATCH {{host}}/orders/2/cancel
+Authorization: Bearer {{tokenKarla}}
 
-### 9. Login de Admin  ->  200 con el token
+###
+
+### 10. Error al intentar cancelar una orden ya cancelada (400 Bad Request)
+PATCH {{host}}/orders/2/cancel
+Authorization: Bearer {{tokenKarla}}
+
+###
+
+### 11. Error al intentar cancelar una orden inexistente (404 Not Found)
+PATCH {{host}}/orders/999999/cancel
+Authorization: Bearer {{tokenKarla}}
+
+### 12. Un cliente intenta completar la orden (403 Forbidden)
+PATCH {{host}}/orders/1/complete
+Authorization: Bearer {{tokenKarla}}
+
+### 13. Crear orden canjeando puntos por un producto gratis (FREE_ITEM)
+POST {{host}}/orders
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{
+  "idClient": 1,
+  "usePoints": true,
+  "rewardProductId": 1,
+  "deliveryMode": "PICKUP",
+  "fulfillmentType": "IMMEDIATE",
+  "details": [
+    {
+      "idProduct": 2,
+      "quantity": 1,
+      "price": 3.0
+    },
+    {
+      "idProduct": 3,
+      "quantity": 1,
+      "price": 2.0
+    }
+  ]
+}
+
+### ==========================================
+### ==========================================
+### 14. Login de Admin  ->  200 con el token
 # @name loginAdmin
 POST {{host}}/auth/login
 Content-Type: application/json
 
-{ "correo": "admin@itson.mx", "password": "gimnasio2026" }
+{ "correo": "admin@itson.mx", "password": "cafeteria2026" }
 
 ###
 @tokenAdmin = {{loginAdmin.response.body.data.access_token}}
 
-### 10. Lo que viaja dentro del token  ->  200
+### 15. Lo que viaja dentro del token  ->  200
 GET {{host}}/auth/yo
 Authorization: Bearer {{tokenAdmin}}
 
-### 11. Obtener Clientes -> 200
-GET {{host}}/clients
+### 16. Un admin completa la orden exitosamente (200 OK - Otorga los puntos)
+PATCH {{host}}/orders/1/complete
 Authorization: Bearer {{tokenAdmin}}
