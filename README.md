@@ -1,3 +1,6 @@
+Es necesario tener instalado MySQL80 pues es la base de datos que se utiliza. También
+VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las pruebas.
+
 1.- Entrar dentro de la raíz "Cafetería
 
 2.- Ejecutar el comando: npm install
