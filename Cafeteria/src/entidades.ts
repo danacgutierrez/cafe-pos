@@ -54,6 +54,7 @@ export enum MeasurementUnit {
 // --- Usuarios ---
 
 export abstract class User {
+    id!: number;
     username!: string;
     email!: string;
     password!: string;
@@ -105,6 +106,7 @@ export class LoyaltyTransaction {
 // --- Pedidos y Pagos ---
 
 export class Order {
+    id!: number;
     scheduleTime!: Date;
     notes!: string;
     total!: number;
@@ -203,6 +205,7 @@ export class ExtraDetails {
 // --- Catálogo y Productos ---
 
 export abstract class Product {
+    id!: number;
     name!: string;
     price!: number;
     description!: string;

@@ -8,7 +8,7 @@ export class InMemoryProductRepository implements ProductRepository {
         this.products = initialProducts;
     }
 
-    findById(name: string): Product | null {
-        return this.products.find(p => p.name === name) || null;
+    findById(id: number): Product | null {
+        return this.products.find(p => p.id === id) || null;
     }
 }
