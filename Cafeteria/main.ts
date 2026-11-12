@@ -117,6 +117,30 @@ function runScenarios(): void {
         ]);
     }, InvalidQuantityError);
 
+    check("Escenario 8: IDs únicos para pedidos", () => {
+        const firstOrder = orderRepo.findAll()[0];
+
+        const secondOrder = orderService.createOrder(client, [
+            { productId: 1, quantity: 1 }
+        ]);
+
+        if (!Number.isInteger(firstOrder.id) || firstOrder.id <= 0) {
+            throw new Error("El primer pedido no tiene un ID válido.");
+        }
+
+        if (!Number.isInteger(secondOrder.id) || secondOrder.id <= 0) {
+            throw new Error("El segundo pedido no tiene un ID válido.");
+        }
+
+        if (firstOrder.id === secondOrder.id) {
+            throw new Error("Los pedidos tienen el mismo ID.");
+        }
+
+        if (orderRepo.findAll().length !== 2) {
+            throw new Error("La cantidad de pedidos guardados es incorrecta.");
+        }
+    });
+
     console.log(`\nResultado: ${passed} correctos, ${failed} fallidos.`);
 
     if (failed > 0) {
