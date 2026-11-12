@@ -7,8 +7,8 @@ function runScenarios() {
     console.log("--- INICIANDO PRUEBAS DE DOMINIO ---\n");
 
     // Preparar datos iniciales
-    const cafeAmericano = { name: "Café Americano", price: 35, description: "Café negro", isActive: true } as Product;
-    const frappeFresa = { name: "Frappé de Fresa", price: 65, description: "Frappé temporada", isActive: false } as Product; // INACTIVO
+    const cafeAmericano = { id: 1, name: "Café Americano", price: 35, description: "Café negro", isActive: true } as Product;
+    const frappeFresa = { id: 2, name: "Frappé de Fresa", price: 65, description: "Frappé temporada", isActive: false } as Product; // INACTIVO
     // 
     const client = new Client();
     client.firstName = "Juan";
@@ -23,7 +23,7 @@ function runScenarios() {
     try {
         console.log("Escenario 1: Creando un pedido válido...");
         orderService.createOrder(client, [
-            { productName: "Café Americano", quantity: 2, price: 35 }
+            { productId: 1, quantity: 2, price: 35 }
         ]);
         console.log("✅ Escenario 1 Exitoso.\n");
     } catch (error: any) {
@@ -43,7 +43,7 @@ function runScenarios() {
     try {
         console.log("Escenario 3: Intentando comprar un producto inactivo (Frappé de Fresa)...");
         orderService.createOrder(client, [
-            { productName: "Frappé de Fresa", quantity: 1, price: 65 }
+            { productId: 2, quantity: 1, price: 65 }
         ]);
         console.log("❌ Error: El sistema debió rechazar el producto inactivo.\n");
     } catch (error: any) {

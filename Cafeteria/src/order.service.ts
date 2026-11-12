@@ -9,7 +9,7 @@ export class OrderService {
         private productRepository: ProductRepository
     ) {}
 
-    createOrder(client: Client, details: { productName: string, quantity: number, price: number }[]): Order {
+    createOrder(client: Client, details: { productId: number, quantity: number, price: number }[]): Order {
         if (!details || details.length === 0) {
             throw new EmptyOrderError();
         }
@@ -18,10 +18,10 @@ export class OrderService {
         let totalAmount = 0;
 
         for (const detail of details) {
-            const product = this.productRepository.findById(detail.productName);
+            const product = this.productRepository.findById(detail.productId);
 
             if (!product) {
-                throw new DomainError(`El producto '${detail.productName}' no existe en el catálogo.`);
+                throw new DomainError(`El producto con ID ${detail.productId} no existe en el catálogo.`);
             }
 
             if (!product.isActive) {
