@@ -1,55 +1,127 @@
 import { InMemoryOrderRepository } from './src/InMemoryOrderRepository';
 import { InMemoryProductRepository } from './src/InMemoryProductRepository';
-import { Client, Product} from './src/entidades';
+import { Client, Product } from './src/entidades';
 import { OrderService } from './src/order.service';
+import {
+    EmptyOrderError,
+    InactiveProductError,
+    ProductNotFoundError,
+    InvalidQuantityError
+} from './src/errores';
 
-function runScenarios() {
+function runScenarios(): void {
     console.log("--- INICIANDO PRUEBAS DE DOMINIO ---\n");
 
-    // Preparar datos iniciales
-    const cafeAmericano = { id: 1, name: "Café Americano", price: 35, description: "Café negro", isActive: true } as Product;
-    const frappeFresa = { id: 2, name: "Frappé de Fresa", price: 65, description: "Frappé temporada", isActive: false } as Product; // INACTIVO
-    // 
+    const cafeAmericano = {
+        id: 1,
+        name: "Café Americano",
+        price: 35,
+        description: "Café negro",
+        isActive: true
+    } as Product;
+
+    const frappeFresa = {
+        id: 2,
+        name: "Frappé de Fresa",
+        price: 65,
+        description: "Frappé temporada",
+        isActive: false
+    } as Product;
+
     const client = new Client();
+    client.id = 1;
     client.firstName = "Juan";
     client.lastName = "Pérez";
 
-    // Inyectar dependencias
-    const productRepo = new InMemoryProductRepository([cafeAmericano, frappeFresa]);
+    const productRepo = new InMemoryProductRepository([
+        cafeAmericano,
+        frappeFresa
+    ]);
+
     const orderRepo = new InMemoryOrderRepository();
     const orderService = new OrderService(orderRepo, productRepo);
 
-    // Escenario 1: Camino feliz (Funciona)
-    try {
-        console.log("Escenario 1: Creando un pedido válido...");
-        orderService.createOrder(client, [
-            { productId: 1, quantity: 2, price: 35 }
-        ]);
-        console.log("✅ Escenario 1 Exitoso.\n");
-    } catch (error: any) {
-        console.error(`❌ Error inesperado: ${error.message}\n`);
+    let passed = 0;
+    let failed = 0;
+
+    function check(
+        name: string,
+        action: () => void,
+        expectedError?: new (...args: any[]) => Error
+    ): void {
+        try {
+            action();
+
+            if (expectedError) {
+                throw new Error("No se lanzó el error esperado.");
+            }
+
+            console.log(`✅ ${name}`);
+            passed++;
+        } catch (error) {
+            if (expectedError && error instanceof expectedError) {
+                console.log(`✅ ${name}: ${error.message}`);
+                passed++;
+            } else {
+                console.error(`❌ ${name}:`, error);
+                failed++;
+            }
+        }
     }
 
-    // Escenario 2: Rechazo por Regla 1 (Pedido Vacío)
-    try {
-        console.log("Escenario 2: Intentando crear un pedido sin productos...");
+    check("Escenario 1: Pedido válido", () => {
+        const order = orderService.createOrder(client, [
+            { productId: 1, quantity: 2 }
+        ]);
+
+        if (order.total !== 70) {
+            throw new Error("El total del pedido es incorrecto.");
+        }
+
+        if (order.orderDetails[0].order !== order) {
+            throw new Error("La relación del detalle con el pedido es incorrecta.");
+        }
+    });
+
+    check("Escenario 2: Pedido vacío", () => {
         orderService.createOrder(client, []);
-        console.log("❌ Error: El sistema debió rechazar el pedido vacío.\n");
-    } catch (error: any) {
-        console.log(`✅ Escenario 2 Exitoso (Rechazado correctamente): ${error.message}\n`);
-    }
+    }, EmptyOrderError);
 
-    // Escenario 3: Rechazo por Regla 2 (Producto Inactivo)
-    try {
-        console.log("Escenario 3: Intentando comprar un producto inactivo (Frappé de Fresa)...");
+    check("Escenario 3: Producto inactivo", () => {
         orderService.createOrder(client, [
-            { productId: 2, quantity: 1, price: 65 }
+            { productId: 2, quantity: 1 }
         ]);
-        console.log("❌ Error: El sistema debió rechazar el producto inactivo.\n");
-    } catch (error: any) {
-        console.log(`✅ Escenario 3 Exitoso (Rechazado correctamente): ${error.message}\n`);
+    }, InactiveProductError);
+
+    check("Escenario 4: Producto inexistente", () => {
+        orderService.createOrder(client, [
+            { productId: 999, quantity: 1 }
+        ]);
+    }, ProductNotFoundError);
+
+    check("Escenario 5: Cantidad cero", () => {
+        orderService.createOrder(client, [
+            { productId: 1, quantity: 0 }
+        ]);
+    }, InvalidQuantityError);
+
+    check("Escenario 6: Cantidad negativa", () => {
+        orderService.createOrder(client, [
+            { productId: 1, quantity: -2 }
+        ]);
+    }, InvalidQuantityError);
+
+    check("Escenario 7: Cantidad decimal", () => {
+        orderService.createOrder(client, [
+            { productId: 1, quantity: 1.5 }
+        ]);
+    }, InvalidQuantityError);
+
+    console.log(`\nResultado: ${passed} correctos, ${failed} fallidos.`);
+
+    if (failed > 0) {
+        process.exitCode = 1;
     }
 }
 
-// Ejecutar
 runScenarios();

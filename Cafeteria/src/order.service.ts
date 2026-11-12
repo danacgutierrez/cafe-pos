@@ -1,7 +1,20 @@
 import { OrderRepository } from './order.repository';
-import { Order, OrderDetail, Client, OrderStatus, DeliveryMode, FulfillmentType} from './entidades';
+import {
+    Order,
+    OrderDetail,
+    Client,
+    OrderStatus,
+    DeliveryMode,
+    FulfillmentType
+} from './entidades';
 import { ProductRepository } from './product.repository';
-import { EmptyOrderError, DomainError, InactiveProductError } from './errores';
+import {
+    EmptyOrderError,
+    InactiveProductError,
+    ProductNotFoundError,
+    InvalidQuantityError,
+    InvalidProductPriceError
+} from './errores';
 
 export class OrderService {
     constructor(
@@ -9,7 +22,10 @@ export class OrderService {
         private productRepository: ProductRepository
     ) {}
 
-    createOrder(client: Client, details: { productId: number, quantity: number, price: number }[]): Order {
+    createOrder(
+        client: Client,
+        details: { productId: number; quantity: number }[]
+    ): Order {
         if (!details || details.length === 0) {
             throw new EmptyOrderError();
         }
@@ -18,24 +34,32 @@ export class OrderService {
         let totalAmount = 0;
 
         for (const detail of details) {
+            if (!Number.isInteger(detail.quantity) || detail.quantity <= 0) {
+                throw new InvalidQuantityError();
+            }
+
             const product = this.productRepository.findById(detail.productId);
 
             if (!product) {
-                throw new DomainError(`El producto con ID ${detail.productId} no existe en el catálogo.`);
+                throw new ProductNotFoundError(detail.productId);
             }
 
             if (!product.isActive) {
                 throw new InactiveProductError(product.name);
             }
 
+            if (!Number.isFinite(product.price) || product.price < 0) {
+                throw new InvalidProductPriceError(product.id);
+            }
+
             orderDetails.push({
                 quantity: detail.quantity,
-                price: detail.price,
+                price: product.price,
                 order: {} as Order,
-                product: product
+                product
             });
 
-            totalAmount += (detail.quantity * detail.price);
+            totalAmount += detail.quantity * product.price;
         }
 
         const newOrder = new Order();
@@ -46,6 +70,10 @@ export class OrderService {
         newOrder.createdAt = new Date();
         newOrder.deliveryMode = DeliveryMode.PICKUP;
         newOrder.fulfillmentType = FulfillmentType.IMMEDIATE;
+
+        for (const detail of orderDetails) {
+            detail.order = newOrder;
+        }
 
         this.orderRepository.save(newOrder);
 
