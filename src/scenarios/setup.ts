@@ -26,6 +26,12 @@ import { CreateProgramInput } from "../loyalty/domain/models/loyalty-inputs";
 import { InMemoryLoyaltyProgramRepository } from "../loyalty/infra/in-memory-loyalty-program.repository";
 import { InMemoryClientBalanceRepository } from "../loyalty/infra/in-memory-client-balance.repository";
 import { Clock } from "../shared/clock";
+import { OrderService } from "../orders/orders.service";
+import { DrinkConfiguration } from "../orders/domain/entities/product-configuration.entity";
+import { CreateOrderInput, OrderItemInput } from "../orders/domain/models/order-inputs";
+import { InMemoryOrderRepository } from "../orders/infra/in-memory-order.repository";
+import { OrderLocationUsageChecker } from "../orders/infra/order-location-usage-checker";
+import { CompositeLocationUsageChecker } from "../location/infra/composite-location-usage-checker";
 
 /** Builds an empty menu. Each scenario starts from scratch. */
 export function buildMenu() {
@@ -208,4 +214,75 @@ export async function seedLoyalty(kit: LoyaltyKit, program: CreateProgramInput) 
     const created = await kit.loyalty.createProgram(admin.id, program);
     await kit.loyalty.activateProgram(admin.id, created.id);
     return { admin, client, program: created };
+}
+
+/**
+ * Builds everything Orders needs on top of an empty menu: users, locations that know about
+ * staff AND orders (so a location with either cannot be deleted), loyalty and the orders themselves.
+ */
+export function buildOrders() {
+    const menuKit = buildMenu();
+    const userRepository = new InMemoryUserRepository();
+    const locationRepository = new InMemoryLocationRepository();
+    const orderRepository = new InMemoryOrderRepository();
+    const programRepository = new InMemoryLoyaltyProgramRepository();
+    const hasher = new FakePasswordHasher();
+    const clock = new FakeClock();
+
+    const locations = new LocationService(
+        locationRepository,
+        new CompositeLocationUsageChecker(new StaffLocationUsageChecker(userRepository), new OrderLocationUsageChecker(orderRepository)),
+    );
+    const users = new UserService(userRepository, locationRepository, hasher);
+    const loyalty = new LoyaltyService(programRepository, new InMemoryClientBalanceRepository(userRepository), users, clock);
+    const orders = new OrderService(
+        orderRepository, menuKit.menu, menuKit.sizes, menuKit.milkTypes, menuKit.sweeteners, menuKit.extras,
+        loyalty, users, locations, clock,
+    );
+
+    return { ...menuKit, users, locations, userRepository, locationRepository, hasher, loyalty, programRepository, clock, orders, orderRepository };
+}
+
+export type OrdersKit = ReturnType<typeof buildOrders>;
+
+/** An administrator, a location with an active staff member, a client, the catalog and the full drink (5000 cents as it comes). */
+export async function seedOrders(kit: OrdersKit) {
+    const { admin, location, staff } = await seedStaff(kit);
+    const client = await kit.users.registerClient(clientInput());
+    const catalog = await seedCatalog(kit.options);
+    const drink = await kit.menu.createDrink(fullDrinkInput(catalog));
+    return { admin, location, staff, client, catalog, drink };
+}
+
+export type OrdersSeed = Awaited<ReturnType<typeof seedOrders>>;
+
+export function hoursFromNow(kit: OrdersKit, hours: number): Date {
+    return new Date(kit.clock.now().getTime() + hours * 60 * 60 * 1000);
+}
+
+/** One line with the drink as it comes: small, whole milk, nothing added. Each scenario overrides only what it wants to change. */
+export function drinkItem(seed: OrdersSeed, overrides: Partial<DrinkConfiguration> = {}, quantity = 1): OrderItemInput {
+    return {
+        quantity,
+        configuration: {
+            kind: "drink",
+            drinkId: seed.drink.id,
+            sizeId: seed.catalog.small.id,
+            milkTypeId: seed.catalog.wholeMilk.id,
+            extras: [],
+            ...overrides,
+        },
+    };
+}
+
+/** A valid pickup order of one plain drink, one hour from now (5000 cents). */
+export function orderInput(kit: OrdersKit, seed: OrdersSeed, overrides: Partial<CreateOrderInput> = {}): CreateOrderInput {
+    return {
+        clientId: seed.client.id,
+        locationId: seed.location.id,
+        scheduleTime: hoursFromNow(kit, 1),
+        items: [drinkItem(seed)],
+        fulfillment: { fulfillmentType: "pickup" },
+        ...overrides,
+    };
 }

@@ -13,6 +13,7 @@ import { Scenario } from "./scenario";
 import { locationScenarios } from "./location.scenarios";
 import { userScenarios } from "./user.scenarios";
 import { loyaltyScenarios } from "./loyalty.scenarios";
+import { ordersScenarios } from "./orders.scenarios";
 
 const scenarios: Scenario[] = [
     ...drinkScenarios,
@@ -22,6 +23,7 @@ const scenarios: Scenario[] = [
     ...locationScenarios,
     ...userScenarios,
     ...loyaltyScenarios,
+    ...ordersScenarios,
 ];
 
 async function main(): Promise<void> {
