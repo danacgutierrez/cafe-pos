@@ -1,4 +1,4 @@
-// NUEVO (Paso 2): registro y login.
+// Registro y login.
 import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';     // firma los tokens (lo da JwtModule)
 import * as bcrypt from 'bcryptjs';            // hash de contrasenas
@@ -26,7 +26,7 @@ export class AuthService {
     const usuario = await this.repo.guardar({
       correo: dto.correo,
       passwordHash: await bcrypt.hash(dto.password, VUELTAS), // el hash, ANTES de guardar
-      rol: dto.rol ?? Rol.client,                             // por omision, miembro
+      rol: Rol.client,                                        // quien se registra siempre es cliente
       idClient: dto.idClient ?? null,
     });
     return this.firmar(usuario); // quien se registra ya queda con sesion

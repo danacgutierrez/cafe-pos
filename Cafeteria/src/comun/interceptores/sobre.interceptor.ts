@@ -1,6 +1,4 @@
-// De la Practica 9B (Paso 4.1): envuelve toda respuesta exitosa en { data, meta }.
-// Rompe el contrato (res[0] pasa a ser res.data[0]): por eso se decide
-// ahora, antes de que el React de la Unidad III empiece a consumirla.
+// Envuelve toda respuesta exitosa en { data, meta }.
 import {
   CallHandler,
   ExecutionContext,

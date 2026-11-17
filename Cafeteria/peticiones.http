@@ -31,6 +31,7 @@ GET {{host}}/clients
 Authorization: Bearer {{tokenKarla}}
 
 ### 6. Crear una Orden -> 201
+# @name ordenCreada
 POST {{host}}/orders
 Content-Type: application/json
 Authorization: Bearer {{tokenKarla}}
@@ -44,16 +45,17 @@ Authorization: Bearer {{tokenKarla}}
   "details": [
     {
       "idProduct": 1,
-      "quantity": 2,
-      "price": 8.50
+      "quantity": 2
     },
     {
       "idProduct": 3,
-      "quantity": 1,
-      "price": 2.00
+      "quantity": 1
     }
   ]
 }
+
+###
+@idOrdenCancelar = {{ordenCreada.response.body.data.id}}
 
 ### 7. Crear una orden a un cliente ajeno a nosotros -> 403
 POST {{host}}/orders
@@ -67,8 +69,7 @@ Authorization: Bearer {{tokenKarla}}
   "details": [
     {
       "idProduct": 2,
-      "quantity": 1,
-      "price": 3.00
+      "quantity": 1
     }
   ]
 }
@@ -84,20 +85,19 @@ Authorization: Bearer {{tokenKarla}}
   "details": [
     {
       "idProduct": 1,
-      "quantity": -5, 
-      "price": 10.00
+      "quantity": -5
     }
   ]
 }
 
-### 9. Cancelar orden exitosamente siendo el dueño (200 OK)
-PATCH {{host}}/orders/2/cancel
+### 9. Cancelar orden exitosamente siendo la clienta (200 OK)
+PATCH {{host}}/orders/{{idOrdenCancelar}}/cancel
 Authorization: Bearer {{tokenKarla}}
 
 ###
 
-### 10. Error al intentar cancelar una orden ya cancelada (400 Bad Request)
-PATCH {{host}}/orders/2/cancel
+### 10. Error al intentar cancelar una orden ya cancelada (409 Conflict, RN-14)
+PATCH {{host}}/orders/{{idOrdenCancelar}}/cancel
 Authorization: Bearer {{tokenKarla}}
 
 ###
@@ -124,13 +124,11 @@ Content-Type: application/json
   "details": [
     {
       "idProduct": 2,
-      "quantity": 1,
-      "price": 3.0
+      "quantity": 1
     },
     {
       "idProduct": 3,
-      "quantity": 1,
-      "price": 2.0
+      "quantity": 1
     }
   ]
 }
@@ -151,6 +149,217 @@ Content-Type: application/json
 GET {{host}}/auth/yo
 Authorization: Bearer {{tokenAdmin}}
 
-### 16. Un admin completa la orden exitosamente (200 OK - Otorga los puntos)
-PATCH {{host}}/orders/1/complete
+### 16a. Crear una orden aparte para completarla -> 201
+# @name orderParaCompletar
+POST {{host}}/orders
+Content-Type: application/json
+Authorization: Bearer {{tokenKarla}}
+
+{
+  "idClient": 1,
+  "scheduleTime": "2027-01-21T15:30:00Z",
+  "deliveryMode": "PICKUP",
+  "fulfillmentType": "IMMEDIATE",
+  "details": [{ "idProduct": 1, "quantity": 1 }]
+}
+
+###
+@idOrder = {{orderParaCompletar.response.body.data.id}}
+
+### 16b. RN-12: completar desde PENDING -> 409 (no se pueden saltar estados)
+PATCH {{host}}/orders/{{idOrder}}/complete
 Authorization: Bearer {{tokenAdmin}}
+
+### 16c. Avanzar a EN PREPARACIÓN -> 200
+PATCH {{host}}/orders/{{idOrder}}/status
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 16d. Avanzar a LISTO -> 200
+PATCH {{host}}/orders/{{idOrder}}/status
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "status": "READY" }
+
+### 16e. Un admin completa la orden -> 200 (otorga puntos)
+PATCH {{host}}/orders/{{idOrder}}/complete
+Authorization: Bearer {{tokenAdmin}}
+
+### ==========================================
+### Casos de uso nuevos (menú, inventario, pagos, recompensas y estados)
+### ==========================================
+
+### 17. Login de Staff -> 200
+# @name loginStaff
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "correo": "barista@itson.mx", "password": "cafeteria2026" }
+
+###
+@tokenStaff = {{loginStaff.response.body.data.access_token}}
+
+### 18. Catálogo público del menú -> 200
+GET {{host}}/menu
+
+### 19. Cotizar una bebida personalizada -> 200 (el precio lo calcula el sistema)
+POST {{host}}/menu/quote
+Content-Type: application/json
+
+{
+  "idBeverage": 1,
+  "customization": {
+    "sizeId": 1,
+    "milkId": 2,
+    "sweetenerId": 3,
+    "sweetness": 50,
+    "extraIds": [4]
+  }
+}
+
+### 20. Dueña agrega un tipo de bebida -> 201
+POST {{host}}/menu/types
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "name": "Té" }
+
+### 21. Dueña consulta el inventario -> 200
+GET {{host}}/inventory
+Authorization: Bearer {{tokenAdmin}}
+
+### 22. Staff registra una entrada de insumo -> 201
+POST {{host}}/inventory/entries
+Authorization: Bearer {{tokenStaff}}
+Content-Type: application/json
+
+{ "idIngredient": 1, "quantity": 250, "reason": "Compra semanal" }
+
+### 23. Cliente registra un pago con tarjeta -> 201 (PENDING; no confirma aún)
+# @name pagoConTarjeta
+POST {{host}}/payments
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{ "idOrder": 1, "method": "CARD", "providerPaymentId": "MP-12345" }
+
+###
+@idPago = {{pagoConTarjeta.response.body.data.id}}
+
+### 24. Staff aprueba el pago -> 200 (RN-18)
+PATCH {{host}}/payments/{{idPago}}/approve
+Authorization: Bearer {{tokenStaff}}
+
+### 25. Cliente consulta intentos y si ya se cubrió el total -> 200
+GET {{host}}/payments/order/1/summary
+Authorization: Bearer {{tokenKarla}}
+
+### 26. Cliente consulta el estado de su pedido -> 200 (RN-16)
+GET {{host}}/orders/1/status
+Authorization: Bearer {{tokenKarla}}
+
+### 27. Staff avanza a EN PREPARACIÓN -> 200 (RN-12/RN-13)
+PATCH {{host}}/orders/1/status
+Authorization: Bearer {{tokenStaff}}
+Content-Type: application/json
+
+{ "status": "IN_PROGRESS" }
+
+### 28. Cliente intenta avanzar el estado -> 403 (RN-13)
+PATCH {{host}}/orders/1/status
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{ "status": "READY" }
+
+### 29. Repetir un pedido anterior recalculando precios -> 200 (RN-17)
+POST {{host}}/orders/1/repeat
+Authorization: Bearer {{tokenKarla}}
+
+### 30. Cliente consulta sus puntos y lo que le falta -> 200 (RN-45)
+GET {{host}}/rewards/clients/1/points
+Authorization: Bearer {{tokenKarla}}
+
+### 31. Vista previa de canje -> 200 (RN-38; no descuenta puntos)
+POST {{host}}/rewards/redemption-plan
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{ "idOrder": 1 }
+
+### 32. Dueña configura un nuevo programa (desactiva el anterior) -> 201 (RN-35)
+POST {{host}}/rewards/programs
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "name": "Cliente Frecuente 2027",
+  "earnMode": "PER_ORDER",
+  "earnValue": 1,
+  "redeemMode": "FREE_ITEM",
+  "pointsPerReward": 9,
+  "pointValue": 0
+}
+
+### 33. Dueña guarda la receta base de una bebida -> 200 (RN-03/RN-26: sin leche)
+PUT {{host}}/menu/beverages/1/recipe
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "idIngredient": 1, "baseQuantity": 18 },
+    { "idIngredient": 3, "baseQuantity": 1 }
+  ]
+}
+
+### 34. Dueña activa una bebida ahora que tiene receta -> 200
+PATCH {{host}}/menu/beverages/1/active
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "isActive": true }
+
+### 35. Dueña cambia el precio base (solo afecta pedidos futuros) -> 200 (RN-08)
+PATCH {{host}}/menu/beverages/1/price
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "basePrice": 6.25 }
+
+### 36. Dueña da de baja lógica un sabor (nunca lo borra) -> 200 (RN-04)
+PATCH {{host}}/menu/flavors/1/active
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "isActive": false }
+
+### 37. Dueña define el mínimo de un insumo -> 200 (RN-32/RN-47)
+PATCH {{host}}/inventory/1/min-stock
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "minStock": 250 }
+
+### 38. Dueña registra una merma -> 201 (RN-30)
+POST {{host}}/inventory/waste
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "idIngredient": 1, "quantity": 5, "reason": "Insumo derramado" }
+
+### 39. Dueña corrige una existencia con un ajuste -> 201 (RN-30/RN-50)
+POST {{host}}/inventory/adjustments
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{ "idIngredient": 1, "quantity": -3, "reason": "Conteo físico" }
+
+### 40. Webhook del proveedor aprueba un pago -> 200 (idempotente, RN-23)
+POST {{host}}/payments/webhook
+Content-Type: application/json
+
+{ "providerPaymentId": "MP-12345", "result": "APPROVED" }

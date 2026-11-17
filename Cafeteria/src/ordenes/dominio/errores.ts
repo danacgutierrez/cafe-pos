@@ -1,9 +1,6 @@
-export class DomainError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "DomainError";
-    }
-}
+import { DomainError } from '../../comun/errores/dominio-error';
+
+export { DomainError } from '../../comun/errores/dominio-error';
 
 export class EmptyOrderError extends DomainError {
     constructor() {
@@ -35,15 +32,33 @@ export class NonOrderFoundError extends DomainError {
     }
 }
 
-export class InvalidPointsToEarn extends DomainError {
-    constructor() {
-        super(`Puntos de entrega invalidos.`);
-    }
-}
-
 export class NonClientFoundError extends DomainError {
     constructor() {
         super(`Cliente no encontrado.`);
     }
 }
 
+export class NoActiveLoyaltyProgramError extends DomainError {
+    constructor() {
+        super(`No hay un programa de lealtad activo.`);
+    }
+}
+
+export class InsufficientPointsError extends DomainError {
+    constructor() {
+        super(`No tienes suficientes puntos para canjear.`);
+    }
+}
+
+export class InvalidPointsToEarn extends DomainError {
+    constructor() {
+        super(`Puntos de entrega invalidos.`);
+    }
+}
+
+// RN-51: dos clientes no pueden compartir el mismo telefono.
+export class DuplicatePhoneError extends DomainError {
+    constructor() {
+        super(`El teléfono ya está registrado (RN-51).`);
+    }
+}

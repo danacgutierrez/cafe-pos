@@ -3,7 +3,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { Rol, type PayloadJwt } from '../auth/dominio/usuario';
-import { Roles } from 'src/auth/decoradores/roles.decorator';
+import { Roles } from '../auth/decoradores/roles.decorator';
 import { ClientsService } from './clients.service';
 import { toClientDto } from './dto/client-response.dto';
 

@@ -13,5 +13,6 @@ import { PrismaOrderRepository } from './infra/order-prisma.repository';
       useClass: PrismaOrderRepository,
     },
   ],
+  exports: [OrdersService],
 })
 export class OrdersModule {}

@@ -1,6 +1,4 @@
-// De la Practica 9B (Paso 3.1): un interceptor. Envuelve al controller: ve la
-// peticion ANTES y la respuesta DESPUES. Es el unico nombre que coincide
-// con Spring (HandlerInterceptor).
+// Un interceptor ve la petición antes y la respuesta después del controller.
 import {
   CallHandler,       // representa "el resto del camino": el controller
   ExecutionContext,  // de aqui se saca la peticion

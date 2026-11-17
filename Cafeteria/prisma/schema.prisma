@@ -25,7 +25,7 @@ model Client {
   firstName      String @db.VarChar(100)
   lastName       String @db.VarChar(100)
   loyaltyBalance Float  @default(0)
-  phoneNumber    String @db.VarChar(20)
+  phoneNumber    String @unique @db.VarChar(20) // RN-51: un telefono solo puede pertenecer a un cliente
 
   orders              Order[]
   usuario             Usuario?
@@ -50,6 +50,7 @@ model Order {
 
   idClient            Int
   loyaltyTransactions LoyaltyTransaction[]
+  payments            Payment[]
 
   client       Client        @relation(fields: [idClient], references: [id])
   orderDetails OrderDetail[]
@@ -108,8 +109,10 @@ model LoyaltyTransaction {
   id              Int      @id @default(autoincrement())
   pointsEarned    Float
   balanceAfter    Float
-  transactionType String   @db.VarChar(20) // Aquí guardará "EARN" o "REDEEM"
+  transactionType String   @db.VarChar(20) // Aquí guardará "EARN", "REDEEM" o "ADJUST"
   createdAt       DateTime @default(now())
+  reason          String?  @db.Text // RN-44: toda correccion lleva motivo
+  responsible     String?  @db.VarChar(100) // RN-44: y responsable
 
   idClient         Int
   idLoyaltyProgram Int
@@ -123,4 +126,138 @@ model LoyaltyTransaction {
   @@index([idLoyaltyProgram])
   @@index([idOrder])
   @@map("loyalty_transactions")
+}
+
+// ============================================================
+// Menú (RN-01 a RN-08): tipos, sabores y opciones son datos,
+// no codigo. La dueña los agrega o desactiva desde la API.
+// ============================================================
+model DrinkType {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(100)
+  isActive Boolean  @default(true)
+
+  flavors   Flavor[]
+  beverages Beverage[]
+
+  @@map("drink_types")
+}
+
+model Flavor {
+  id          Int     @id @default(autoincrement())
+  idDrinkType Int
+  name        String  @db.VarChar(100)
+  isActive    Boolean @default(true)
+
+  drinkType DrinkType  @relation(fields: [idDrinkType], references: [id])
+  beverages Beverage[]
+
+  @@index([idDrinkType])
+  @@map("flavors")
+}
+
+// SIZE, MILK, SWEETENER o EXTRA. `surcharge` es el recargo de RN-07.
+model MenuOption {
+  id        Int     @id @default(autoincrement())
+  kind      String  @db.VarChar(20)
+  name      String  @db.VarChar(100)
+  surcharge Float   @default(0)
+  isActive  Boolean @default(true)
+
+  @@index([kind])
+  @@map("menu_options")
+}
+
+model Beverage {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(100)
+  idDrinkType Int
+  idFlavor    Int
+  basePrice   Float
+  isActive    Boolean @default(false) // RN-03: requiere receta para activarse
+  allowsMilk  Boolean @default(true)  // RN-06
+
+  drinkType DrinkType @relation(fields: [idDrinkType], references: [id])
+  flavor    Flavor    @relation(fields: [idFlavor], references: [id])
+  recipe    Recipe?
+
+  @@index([idDrinkType])
+  @@index([idFlavor])
+  @@map("beverages")
+}
+
+model Recipe {
+  id         Int @id @default(autoincrement())
+  idBeverage Int @unique
+
+  beverage Beverage    @relation(fields: [idBeverage], references: [id])
+  items    RecipeItem[]
+
+  @@map("recipes")
+}
+
+model RecipeItem {
+  id           Int   @id @default(autoincrement())
+  idRecipe     Int
+  idIngredient Int
+  baseQuantity Float // la receta base NUNCA incluye leche (RN-26)
+
+  recipe     Recipe     @relation(fields: [idRecipe], references: [id])
+  ingredient Ingredient @relation(fields: [idIngredient], references: [id])
+
+  @@index([idRecipe])
+  @@index([idIngredient])
+  @@map("recipe_items")
+}
+
+// ============================================================
+// Inventario (RN-25 a RN-34)
+// ============================================================
+model Ingredient {
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(100)
+  stock    Float  @default(0)
+  minStock Float  @default(0) // RN-32: alerta cuando stock <= minStock
+
+  recipeItems RecipeItem[]
+  movements   InventoryMovement[]
+
+  @@map("ingredients")
+}
+
+// Los movimientos no se editan ni se borran (RN-30). quantity es con
+// signo: positivo entra, negativo sale.
+model InventoryMovement {
+  id           Int      @id @default(autoincrement())
+  idIngredient Int
+  movementType String   @db.VarChar(20) // ENTRY, SALE, WASTE, ADJUSTMENT, RETURN
+  quantity     Float
+  balanceAfter Float
+  reason       String?  @db.Text
+  responsible  String?  @db.VarChar(100)
+  createdAt    DateTime @default(now())
+
+  ingredient Ingredient @relation(fields: [idIngredient], references: [id])
+
+  @@index([idIngredient])
+  @@index([createdAt])
+  @@map("inventory_movements")
+}
+
+// ============================================================
+// Pagos (RN-18 a RN-24). Nunca hay columnas de tarjeta (RN-21).
+// ============================================================
+model Payment {
+  id                Int      @id @default(autoincrement())
+  idOrder           Int
+  method            String   @db.VarChar(20) // CARD, CASH, TRANSFER
+  amount            Float // total congelado del pedido (RN-22)
+  status            String   @default("PENDING") @db.VarChar(20) // PENDING, APPROVED, REJECTED, REFUNDED
+  providerPaymentId String?  @unique @db.VarChar(100) // RN-23: referencia, no datos de tarjeta
+  createdAt         DateTime @default(now())
+
+  order Order @relation(fields: [idOrder], references: [id])
+
+  @@index([idOrder])
+  @@map("payments")
 }

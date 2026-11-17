@@ -1,6 +1,4 @@
-// De la Practica 9B (Paso 2.1): un middleware. Este SI es el equivalente del Filter
-// de Java: corre antes que todo, antes de que Nest sepa que controller
-// va a atender la peticion.
+// Un middleware corre antes de que Nest sepa qué controller atenderá la petición.
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';   // genera ids unicos, viene con Node

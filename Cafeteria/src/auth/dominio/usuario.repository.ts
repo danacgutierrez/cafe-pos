@@ -1,4 +1,4 @@
-// NUEVO (Paso 1): el mismo molde de siempre, interfaz + token.
+// Contrato del repositorio de usuarios.
 import { NuevoUsuario, Usuario } from './usuario';
 
 // Lo que el AuthService necesita. No sabe si es memoria o MySQL.

@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { toProductDto } from './dto/product-response';
-import { Publico } from 'src/auth/decoradores/publico.decorator';
+import { Publico } from '../auth/decoradores/publico.decorator';
 
 @Controller('products')
 export class ProductsController {

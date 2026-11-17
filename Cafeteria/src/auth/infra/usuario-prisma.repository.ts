@@ -1,4 +1,4 @@
-// NUEVO (Paso 7): el mismo contrato que el de memoria, pero contra MySQL.
+// Repositorio de usuarios contra MySQL.
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NuevoUsuario, Rol, Usuario } from '../dominio/usuario';

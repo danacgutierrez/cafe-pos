@@ -1,9 +1,9 @@
-// NUEVO (Paso 1): el usuario que inicia sesion.
+// El usuario que inicia sesion.
 
-// Los roles posibles. Es enum (y no union de textos) porque existe en
-// tiempo de ejecucion: @IsEnum(Rol) del DTO lo necesita para comparar.
+// Los roles posibles. Coinciden con los valores guardados en la base.
 export enum Rol {
-  client = 'entrenador',
+  client = 'client',
+  staff = 'staff',
   admin = 'admin',
 }
 
@@ -14,7 +14,7 @@ export interface Usuario {
   // guardar la contrasena en claro por descuido.
   passwordHash: string;
   rol: Rol;
-  idClient: number | null; // el miembro del gimnasio que es; null si es personal
+  idClient: number | null; // cliente de la cafeteria al que pertenece; null si es personal
   creadoEn: Date;
 }
 

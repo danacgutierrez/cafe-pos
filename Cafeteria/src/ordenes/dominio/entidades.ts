@@ -1,6 +1,7 @@
 export enum OrderStatus {
     PENDING = 'PENDING',
     IN_PROGRESS = 'IN_PROGRESS',
+    READY = 'READY',
     COMPLETED = 'COMPLETED',
     CANCELLED = 'CANCELLED'
 }
@@ -27,7 +28,9 @@ export enum RedeemMode {
 
 export enum TransactionType {
     EARN = 'EARN',
-    REDEEM = 'REDEEM'
+    REDEEM = 'REDEEM',
+    REVERSE = 'REVERSE', // RN-42: cancelación o reembolso
+    ADJUST = 'ADJUST'    // RN-44: corrección con motivo y responsable
 }
 
 export class Order {
@@ -59,7 +62,10 @@ export abstract class OrderDetail {
     idProduct!: number;
 }
 
-export type NewOrder = Omit<Order, 'id' | 'createdAt' | 'status'>;
+// Al guardar, la BD todavia no asigno id/createdAt ni las relaciones.
+export type NewOrder = Omit<Order, 'id' | 'createdAt' | 'status' | 'loyaltyTransactions'> & {
+    loyaltyTransactions: NewLoyaltyTransaction[];
+};
 
 export class LoyaltyProgram {
     id!: number;

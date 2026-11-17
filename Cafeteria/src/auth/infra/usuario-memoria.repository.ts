@@ -1,12 +1,11 @@
-// NUEVO (Paso 1): usuarios en memoria, para arrancar sin migracion.
-// En el Paso 7 se cambia por el de Prisma: una linea en auth.module.ts.
+// Usuarios en memoria, para arrancar sin migracion.
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { NuevoUsuario, Rol, Usuario } from '../dominio/usuario';
 import { UsuarioRepository } from '../dominio/usuario.repository';
 
-// Las mismas tres cuentas del doble de la Unidad III, para que el front
-// funcione igual contra esta API.
+// Las mismas tres cuentas del seed, para que el front funcione igual
+// contra esta API.
 const CUENTAS: NuevoUsuario[] = [
   { correo: 'karla@itson.mx', passwordHash: '', rol: Rol.client, idClient: 1 },
   { correo: 'ana@itson.mx', passwordHash: '', rol: Rol.client, idClient: null },
@@ -19,8 +18,8 @@ export class UsuarioMemoriaRepository implements UsuarioRepository {
   private siguienteId = 1;
 
   constructor() {
-    // Las tres usan "gimnasio2026". Se guarda el HASH, nunca el texto.
-    const hash = bcrypt.hashSync('gimnasio2026', 10);
+    // Las tres usan "cafeteria2026". Se guarda el HASH, nunca el texto.
+    const hash = bcrypt.hashSync('cafeteria2026', 10);
     for (const c of CUENTAS) {
       void this.guardar({ ...c, passwordHash: hash });
     }

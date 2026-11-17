@@ -1,19 +1,19 @@
-// Primera linea: carga el .env (DATABASE_URL y ahora tambien JWT_SECRET).
+// Primera linea: carga el .env (DATABASE_URL y JWT_SECRET).
 import 'dotenv/config';
-import { NestFactory, Reflector } from '@nestjs/core';   // NUEVO: Reflector
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // NUEVO (Paso 6)
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { DominioExceptionFilter } from './comun/filtros/dominio.filter';
 import { LoggingInterceptor } from './comun/interceptores/logging.interceptor';
 import { SobreInterceptor } from './comun/interceptores/sobre.interceptor';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard'; // NUEVO (Paso 4)
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // De la 9B: CORS, validacion, filtro e interceptores.
+  // CORS, validacion, filtro e interceptores.
   app.enableCors({
     origin: ['http://localhost:5173'],
     exposedHeaders: ['Location', 'X-Request-Id'],
@@ -24,13 +24,14 @@ async function bootstrap() {
   app.useGlobalFilters(new DominioExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor(), new SobreInterceptor());
 
-  // NUEVO (Paso 4): el guardia para TODAS las rutas.
-  const reflector = app.get(Reflector);             // el guard lo usa para leer @Publico()
-  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector)); // tarea: + new RolesGuard(reflector)
+  // Guardias globales: exigen token salvo en las rutas marcadas @Publico().
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
-  // NUEVO (Paso 6): la documentacion OpenAPI.
+  // Documentacion OpenAPI.
   const config = new DocumentBuilder()
-    .setTitle('API del Gimnasio')          // titulo que sale arriba de /docs
+    .setTitle('API de la Cafetería')
+    .setDescription('API del sistema de punto de venta de la cafetería')
     .setVersion('1.0')
     .addBearerAuth()                       // agrega el boton Authorize
     .addSecurityRequirements('bearer')     // pone el candado en todas las rutas

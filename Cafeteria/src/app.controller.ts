@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Publico } from './auth/decoradores/publico.decorator'; // NUEVO (Paso 4)
+import { Publico } from './auth/decoradores/publico.decorator';
 
-@Publico() // NUEVO (Paso 4): la raiz es publica, sin token
+@Publico() // la raiz es publica, sin token
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {} // Nest arma AppService y lo entrega ya listo aquí

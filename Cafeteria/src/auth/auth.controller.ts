@@ -1,4 +1,4 @@
-// NUEVO (Paso 2): las rutas /auth/registro, /auth/login y /auth/yo.
+// Rutas /auth/registro, /auth/login y /auth/yo.
 import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegistroDto, TokenDto } from './dto/auth.dto';

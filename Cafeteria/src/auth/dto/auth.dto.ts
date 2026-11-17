@@ -1,8 +1,7 @@
-// NUEVO (Paso 2): lo que entra por /auth/registro y /auth/login.
+// Lo que entra por /auth/registro y /auth/login.
 // Sin @ApiProperty: el plugin de Swagger (nest-cli.json) lee los archivos
 // .dto.ts y los documenta solo, incluidas estas reglas.
-import { IsEmail, IsEnum, IsInt, IsOptional, MinLength } from 'class-validator';
-import { Rol } from '../dominio/usuario';
+import { IsEmail, IsInt, IsOptional, MinLength } from 'class-validator';
 
 export class RegistroDto {
   @IsEmail({}, { message: 'el correo no tiene un formato valido' })
@@ -11,10 +10,6 @@ export class RegistroDto {
   // El minimo va aqui, en la frontera. En el Service ya seria tarde.
   @MinLength(8, { message: 'la contrasena debe tener al menos 8 caracteres' })
   password!: string;
-
-  @IsOptional() // si no lo mandan, el Service pone "miembro"
-  @IsEnum(Rol, { message: 'rol debe ser miembro, entrenador o admin' })
-  rol?: Rol;
 
   @IsOptional()
   @IsInt()

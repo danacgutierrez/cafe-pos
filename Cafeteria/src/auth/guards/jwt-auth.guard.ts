@@ -1,4 +1,4 @@
-// NUEVO (Paso 4): el guardia que se registra global en main.ts.
+// Guardia registrado globalmente en main.ts.
 // Seguro por omision: TODO pide token, y lo publico se marca a mano con
 // @Publico(). Si alguien olvida @Publico(), la ruta da 401 y se nota; al
 // reves, olvidar proteger una ruta deja un hueco que nadie ve.

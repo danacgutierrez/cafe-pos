@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service'; 
-import { OrderRepository } from '../dominio/order.repository'; 
-import { Order, LoyaltyProgram } from '../dominio/entidades';
-import { Product } from 'src/productos/dominio/entidades'; 
-import { Client } from 'src/generado/prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
+import { OrderRepository } from '../dominio/order.repository';
+import { Order, LoyaltyProgram, OrderStatus, TransactionType } from '../dominio/entidades';
+import { Product } from '../../productos/dominio/entidades';
+import { Client } from '../../clientes/dominio/entidades';
 
 @Injectable()
 export class PrismaOrderRepository implements OrderRepository {
@@ -127,7 +127,7 @@ export class PrismaOrderRepository implements OrderRepository {
       const orderBd = await this.prisma.order.update({
         where: { id },
         data: {
-          status: 'CANCELLED',
+          status: OrderStatus.CANCELLED,
         },
         include: {
           orderDetails: true,
@@ -153,12 +153,22 @@ export class PrismaOrderRepository implements OrderRepository {
       // Cambiar estado de la orden
       const updatedOrder = await tx.order.update({
         where: { id: idOrder },
-        data: { status: 'COMPLETED' },
+        data: { status: OrderStatus.COMPLETED },
         include: {
           orderDetails: true,
           loyaltyTransactions: true
         }
       });
+
+      // RN-23/RN-37: si otro flujo ya otorgó los puntos de esta orden no se
+      // vuelven a sumar. El estado sí se actualiza porque es idempotente.
+      const yaGanoPuntos = await tx.loyaltyTransaction.findFirst({
+        where: { idOrder, transactionType: TransactionType.EARN },
+      });
+
+      if (yaGanoPuntos) {
+        return updatedOrder;
+      }
 
       // Registrar la transacción de puntos
       await tx.loyaltyTransaction.create({
@@ -166,7 +176,7 @@ export class PrismaOrderRepository implements OrderRepository {
           idClient: idClient,
           idOrder: idOrder,
           idLoyaltyProgram: idLoyaltyProgram,
-          transactionType: 'EARN',
+          transactionType: TransactionType.EARN,
           pointsEarned: pointsEarned,
           balanceAfter: newBalance
         }

@@ -1,34 +1,39 @@
-// De la Practica 9B (Paso 2.2): se importan MiddlewareConsumer y NestModule.
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-//import { PrismaModule } from './prisma/prisma.module';
-// NUEVO (Practica 10, Paso 3): el modulo de autenticacion
 import { AuthModule } from './auth/auth.module';
-// De la Practica 9B: el middleware
 import { PeticionIdMiddleware } from './comun/middleware/peticion-id.middleware';
 import { OrdersModule } from './ordenes/orders.module';
 import { ProductsModule } from './productos/products.module';
 import { ClientsModule } from './clientes/clients.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { MenuModule } from './menu/modulo/menu.module';
+import { InventoryModule } from './inventario/modulo/inventory.module';
+import { PaymentsModule } from './pagos/modulo/payments.module';
+import { RewardsModule } from './recompensas/modulo/rewards.module';
+import { StatusModule } from './estados/modulo/status.module';
 
 @Module({
   imports: [
-    AuthModule, // NUEVO (Paso 3): registro, login y la estrategia JWT
+    AuthModule,
     OrdersModule,
     ProductsModule,
     ClientsModule,
+    MenuModule,
+    InventoryModule,
+    PaymentsModule,
+    RewardsModule,
+    StatusModule,
     PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-// De la Practica 9B (Paso 2.2): un middleware NO va en providers. Se registra
-// implementando NestModule y su metodo configure().
+// Un middleware no va en providers: se registra en configure().
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(PeticionIdMiddleware) // que middleware
-      .forRoutes('*');             // en que rutas: '*' = todas
+      .apply(PeticionIdMiddleware)
+      .forRoutes('*');
   }
 }

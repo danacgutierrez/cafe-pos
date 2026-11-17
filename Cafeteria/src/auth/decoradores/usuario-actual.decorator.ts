@@ -1,5 +1,4 @@
-// NUEVO (Paso 2): un decorador de PARAMETRO propio, como @Body o @Param.
-// Evita escribir @Req() req y luego req.user (que ademas viene sin tipo).
+// Decorador de parametro, como @Body o @Param, que entrega req.user ya tipado.
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { PayloadJwt } from '../dominio/usuario';
 

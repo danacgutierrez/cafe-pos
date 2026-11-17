@@ -1,4 +1,4 @@
-import { Client } from 'src/generado/prisma/client';
+import { Client } from '../../clientes/dominio/entidades';
 import { Product } from '../../productos/dominio/entidades';
 import { LoyaltyProgram, Order } from './entidades';
 import { NewOrder } from './entidades';
