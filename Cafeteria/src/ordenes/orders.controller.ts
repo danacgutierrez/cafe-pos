@@ -9,11 +9,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Res,
 } from '@nestjs/common';
 import { UsuarioActual } from '../auth/decoradores/usuario-actual.decorator';
 import { Rol, type PayloadJwt } from '../auth/dominio/usuario';
-import { Roles } from 'src/auth/decoradores/roles.decorator';
+import { Roles } from '../auth/decoradores/roles.decorator';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { toOrderDto } from './dto/order-response.dto';
@@ -55,7 +54,7 @@ export class OrdersController {
             throw new NotFoundException(`La orden con id ${id} no fue encontrada`);
         }
 
-        if (usuario.rol !== 'admin' && usuario.idClient !== orderToCancel.idClient) {
+        if (usuario.rol !== Rol.admin && usuario.idClient !== orderToCancel.idClient) {
             throw new ForbiddenException('Solo puedes cancelar tus propias órdenes');
         }
 

@@ -1,7 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { OrderRepository } from './dominio/order.repository';
-import { Order, OrderDetail, DeliveryMode, FulfillmentType, EarnMode, TransactionType, NewLoyaltyTransaction, LoyaltyTransaction} from '../ordenes/dominio/entidades';
-import { EmptyOrderError, InactiveProductError, InvalidOrderStatusError, InvalidPointsToEarn, NonClientFoundError, NonExistentProductError, NonOrderFoundError } from './dominio/errores';
+import {
+    DeliveryMode,
+    EarnMode,
+    FulfillmentType,
+    Order,
+    OrderDetail,
+    NewLoyaltyTransaction,
+    OrderStatus,
+    RedeemMode,
+    TransactionType,
+} from './dominio/entidades';
+import {
+    EmptyOrderError,
+    InactiveProductError,
+    InsufficientPointsError,
+    InvalidOrderStatusError,
+    NoActiveLoyaltyProgramError,
+    NonClientFoundError,
+    NonExistentProductError,
+} from './dominio/errores';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ORDER_REPOSITORY } from './orders.tokens';
 
@@ -31,14 +49,15 @@ export class OrdersService {
                 throw new InactiveProductError(product.name);
             }
 
-            totalAmount += (detail.quantity * detail.price);
+            // El precio viene de la BD: el cliente no puede fijarlo.
+            totalAmount += detail.quantity * product.price;
 
             orderDetails.push({
                 id: 0,
                 idOrder: 0,
                 idProduct: product.id,
                 quantity: detail.quantity,
-                price: detail.price,
+                price: product.price,
             } as OrderDetail);
         }
 
@@ -49,25 +68,25 @@ export class OrdersService {
         }
 
         let newBalance = client.loyaltyBalance;
-        const loyaltyTransactions: any[] = [];
+        const loyaltyTransactions: NewLoyaltyTransaction[] = [];
 
         // Canjeo de puntos
         if (dto.usePoints) {
             const loyaltyProgramActive = await this.repo.findLoyaltyProgramActive();
 
             if (!loyaltyProgramActive) {
-                throw new Error('No hay un programa de lealtad activo');
+                throw new NoActiveLoyaltyProgramError();
             }
 
             if (newBalance < loyaltyProgramActive.pointsPerReward) {
-                throw new Error('No tienes suficientes puntos para canjear');
+                throw new InsufficientPointsError();
             }
 
             // Restar los puntos necesarios
             const pointsToDeduct = loyaltyProgramActive.pointsPerReward;
             newBalance -= pointsToDeduct;
 
-            if (loyaltyProgramActive.redeemMode === 'FREE_ITEM') {
+            if (loyaltyProgramActive.redeemMode === RedeemMode.FREE_ITEM) {
                 const freeProductId = dto.rewardProductId || 1;
                 const freeProduct = await this.repo.findProduct(freeProductId);
 
@@ -81,7 +100,7 @@ export class OrdersService {
                     quantity: 1,
                     price: 0, // Regalo
                 } as OrderDetail);
-            } else if (loyaltyProgramActive.redeemMode === 'DISCOUNT') {
+            } else if (loyaltyProgramActive.redeemMode === RedeemMode.DISCOUNT) {
                 const discount = pointsToDeduct * loyaltyProgramActive.pointValue;
                 totalAmount = Math.max(0, totalAmount - discount);
             }
@@ -89,7 +108,7 @@ export class OrdersService {
             loyaltyTransactions.push({
                 idClient: client.id,
                 idLoyaltyProgram: loyaltyProgramActive.id,
-                transactionType: 'REDEEM',
+                transactionType: TransactionType.REDEEM,
                 pointsEarned: -pointsToDeduct, // Puntos en negativo
                 balanceAfter: newBalance,
             });
@@ -99,14 +118,16 @@ export class OrdersService {
             idClient: dto.idClient,
             orderDetails: orderDetails,
             total: totalAmount,
-            deliveryMode: DeliveryMode.PICKUP,
-            fulfillmentType: FulfillmentType.IMMEDIATE,
+            notes: dto.notes,
+            deliveryNotes: dto.deliveryNotes,
+            deliveryMode: dto.deliveryMode ?? DeliveryMode.PICKUP,
+            fulfillmentType: dto.fulfillmentType ?? FulfillmentType.IMMEDIATE,
             scheduleTime: dto.scheduleTime ? new Date(dto.scheduleTime) : new Date(),
             loyaltyTransactions: loyaltyTransactions,
         };
 
         if (dto.usePoints) {
-            this.repo.updateClientBalance(dto.idClient, newBalance);
+            await this.repo.updateClientBalance(dto.idClient, newBalance);
         }
 
         return this.repo.save(newOrder);
@@ -123,7 +144,8 @@ export class OrdersService {
             return null;
         }
 
-        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+        // RN-14: solo se puede cancelar mientras esté recibido (PENDING).
+        if (order.status !== OrderStatus.PENDING) {
             throw new InvalidOrderStatusError();
         }
 
@@ -141,7 +163,8 @@ export class OrdersService {
             return null;
         }
 
-        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+        // RN-12: el estado solo avanza de READY a COMPLETED; no se saltan pasos.
+        if (order.status !== OrderStatus.READY) {
             throw new InvalidOrderStatusError();
         }
 
@@ -150,11 +173,13 @@ export class OrdersService {
 
         let pointsToEarn = 0;
 
-        // Calcular si hay puntos para otorgar
+        // RN-36/RN-41: PER_ORDER otorga una cantidad fija; AMOUNT_SPENT
+        // calcula sobre lo realmente pagado (el total ya viene descontado).
         if (client && loyaltyProgramActive) {
-            pointsToEarn = loyaltyProgramActive.earnMode === 'PER_ORDER'
+            pointsToEarn = loyaltyProgramActive.earnMode === EarnMode.PER_ORDER
                 ? loyaltyProgramActive.earnValue
-                : 0;
+                : order.total * loyaltyProgramActive.earnValue;
+            pointsToEarn = Math.round(pointsToEarn * 100) / 100;
         }
 
         // Delegar al método correcto según si hay puntos o no
