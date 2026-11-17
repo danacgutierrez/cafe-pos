@@ -363,3 +363,38 @@ POST {{host}}/payments/webhook
 Content-Type: application/json
 
 { "providerPaymentId": "MP-12345", "result": "APPROVED" }
+
+
+### ==========================================
+### Permisos RN-46 / RN-47 / RN-50
+### ==========================================
+
+### 41. Staff consulta los puntos de la clienta -> 200 (RN-46)
+GET {{host}}/rewards/clients/1/points
+Authorization: Bearer {{tokenStaff}}
+
+### 42. Staff consulta los movimientos de la clienta -> 200 (RN-46)
+GET {{host}}/rewards/clients/1/movements
+Authorization: Bearer {{tokenStaff}}
+
+### 43. Staff intenta configurar el menú -> 403 (RN-47: solo la dueña)
+POST {{host}}/menu/types
+Authorization: Bearer {{tokenStaff}}
+Content-Type: application/json
+
+{ "name": "Café de olla" }
+
+### 44. Staff intenta definir un mínimo -> 403 (RN-47: solo la dueña)
+PATCH {{host}}/inventory/1/min-stock
+Authorization: Bearer {{tokenStaff}}
+Content-Type: application/json
+
+{ "minStock": 999 }
+
+### 45. Clienta intenta aprobar un pago -> 403 (RN-50: solo personal)
+PATCH {{host}}/payments/{{idPago}}/approve
+Authorization: Bearer {{tokenKarla}}
+
+### 46. Clienta intenta ver todos los movimientos -> 403 (RN-50: solo la dueña)
+GET {{host}}/rewards/movements
+Authorization: Bearer {{tokenKarla}}

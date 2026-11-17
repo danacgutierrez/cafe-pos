@@ -226,7 +226,13 @@ export class RewardsService {
     }
 
     private verificarAcceso(idClient: number, usuario: PayloadJwt): void {
-        if (usuario.rol !== Rol.client && usuario.rol !== Rol.admin) {
+        // RN-46: la dueña y el personal pueden consultar puntos y movimientos
+        // de cualquier cliente para atenderlo en caja.
+        if (
+            usuario.rol !== Rol.client &&
+            usuario.rol !== Rol.staff &&
+            usuario.rol !== Rol.admin
+        ) {
             throw new ForbiddenException('No tienes permiso para consultar puntos');
         }
 
