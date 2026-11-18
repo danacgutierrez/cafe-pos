@@ -5,7 +5,7 @@ BACKEND:
 Es necesario tener instalado MySQL80 pues es la base de datos que se utiliza. También
 VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las pruebas.
 
-1.- Entrar dentro de la raíz "Cafetería
+1.- Entrar dentro de la raíz "backend-cafepos"
 
 2.- Ejecutar el comando: npm install
 
@@ -27,13 +27,11 @@ VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las 
 
 FRONTEND:
 
-1.- Entrar dentro de la raíz "Cafetería
+1.- Entrar dentro de la raíz "frontend-cafepos"
 
 2.- Ejecutar el comando: npm install
 
 3.- Ejecutar el comando: npm run dev
 
 4.- Entrar a http://localhost:5123/ en un navegador
-
-
 
