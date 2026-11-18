@@ -13,5 +13,6 @@ import { PrismaClientRepository } from './infra/client-prisma.repository';
       useClass: PrismaClientRepository,
     },
   ],
+  exports: [CLIENT_REPOSITORY],
 })
 export class ClientsModule {}

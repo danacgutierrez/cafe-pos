@@ -11,6 +11,10 @@ export class InMemoryClientRepository implements ClientRepository {
         return this.clients.find(client => client.id === id) || null;
     }
 
+    async findByPhone(phoneNumber: string): Promise<Client | null> {
+        return this.clients.find(client => client.phoneNumber === phoneNumber) || null;
+    }
+
     async findAll(): Promise<Client[]> {
         return [...this.clients];
     }

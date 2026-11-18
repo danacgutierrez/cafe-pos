@@ -25,7 +25,9 @@ export class PrismaOrderRepository implements OrderRepository {
           create: datos.orderDetails.map((detail: any) => ({
             quantity: detail.quantity,
             price: detail.price,
-            idProduct: detail.idProduct,
+            idProduct: detail.idProduct ?? null,
+            idBeverage: detail.idBeverage ?? null,
+            customization: detail.customization ?? null,
           })),
         },
 
@@ -56,6 +58,19 @@ export class PrismaOrderRepository implements OrderRepository {
         orderDetails: true,
         loyaltyTransactions: true,
       },
+    });
+
+    return ordersBd as unknown as Order[];
+  }
+
+  async findByClient(idClient: number): Promise<Order[]> {
+    const ordersBd = await this.prisma.order.findMany({
+      where: { idClient },
+      include: {
+        orderDetails: true,
+        loyaltyTransactions: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
 
     return ordersBd as unknown as Order[];

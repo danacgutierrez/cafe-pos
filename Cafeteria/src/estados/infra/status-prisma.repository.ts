@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Product } from '../../productos/dominio/entidades';
+import { Beverage } from '../../menu/dominio/entidades';
 import { OrderStatus } from '../../ordenes/dominio/entidades';
 import { PedidoParaEstado } from '../dominio/entidades';
 import { StatusRepository } from '../dominio/status.repository';
@@ -25,7 +26,8 @@ export class PrismaStatusRepository implements StatusRepository {
       status: pedido.status,
       total: Number(pedido.total),
       orderDetails: pedido.orderDetails.map((detalle) => ({
-        idProduct: detalle.idProduct,
+        idProduct: detalle.idProduct ?? undefined,
+        idBeverage: detalle.idBeverage ?? undefined,
         quantity: detalle.quantity,
         price: Number(detalle.price),
       })),
@@ -53,6 +55,11 @@ export class PrismaStatusRepository implements StatusRepository {
     return producto ? (producto as Product) : null;
   }
 
+  async findBeverage(id: number): Promise<Beverage | null> {
+    const bebida = await this.prisma.beverage.findUnique({ where: { id } });
+    return bebida ? (bebida as Beverage) : null;
+  }
+
   async updateStatus(id: number, status: OrderStatus): Promise<PedidoParaEstado> {
     const pedido = await this.prisma.order.update({
       where: { id },
@@ -66,7 +73,8 @@ export class PrismaStatusRepository implements StatusRepository {
       status: pedido.status,
       total: Number(pedido.total),
       orderDetails: pedido.orderDetails.map((detalle) => ({
-        idProduct: detalle.idProduct,
+        idProduct: detalle.idProduct ?? undefined,
+        idBeverage: detalle.idBeverage ?? undefined,
         quantity: detalle.quantity,
         price: Number(detalle.price),
       })),

@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ClientsModule } from '../clientes/clients.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
@@ -11,6 +12,7 @@ import { UsuarioPrismaRepository } from './infra/usuario-prisma.repository';
 @Module({
   imports: [
     PassportModule,
+    ClientsModule,
     // Configura el JwtService que usa AuthService para firmar.
     JwtModule.register({
       secret: process.env.JWT_SECRET,  // la llave: quien la tenga firma tokens validos

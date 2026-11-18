@@ -36,6 +36,13 @@ export class OrdersController {
         return toOrderDto(order);
     }
 
+    // RN-16: historial del cliente autenticado, sin exponer el de los demás.
+    @Get('mine')
+    async findMine(@UsuarioActual() usuario: PayloadJwt) {
+        const pedidos = await this.service.findMine(usuario);
+        return pedidos.map(toOrderDto);
+    }
+
     @Roles(Rol.admin)
     @Get()
     async findAll() {

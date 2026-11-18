@@ -1,7 +1,11 @@
 // Registro y login.
+import { randomUUID } from 'node:crypto';
 import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';     // firma los tokens (lo da JwtModule)
 import * as bcrypt from 'bcryptjs';            // hash de contrasenas
+import { CLIENT_REPOSITORY } from '../clientes/clients.tokens';
+import type { ClientRepository } from '../clientes/dominio/client.repository';
+import type { NuevoClient } from '../clientes/dominio/entidades';
 import { PayloadJwt, Rol, Usuario } from './dominio/usuario';
 import { USUARIO_REPOSITORY, type UsuarioRepository } from './dominio/usuario.repository';
 import { LoginDto, RegistroDto, TokenDto } from './dto/auth.dto';
@@ -14,6 +18,7 @@ const VUELTAS = 10;
 export class AuthService {
   constructor(
     @Inject(USUARIO_REPOSITORY) private readonly repo: UsuarioRepository, // por el token
+    @Inject(CLIENT_REPOSITORY) private readonly clientes: ClientRepository,
     private readonly jwt: JwtService,                                    // por la clase
   ) {}
 
@@ -23,12 +28,41 @@ export class AuthService {
     if (await this.repo.buscarPorCorreo(dto.correo)) {
       throw new ConflictException('Ese correo ya esta registrado'); // 409
     }
-    const usuario = await this.repo.guardar({
-      correo: dto.correo,
-      passwordHash: await bcrypt.hash(dto.password, VUELTAS), // el hash, ANTES de guardar
-      rol: Rol.client,                                        // quien se registra siempre es cliente
-      idClient: dto.idClient ?? null,
-    });
+
+    const passwordHash = await bcrypt.hash(dto.password, VUELTAS);
+
+    // Si no se vincula un Client existente, se crea uno nuevo en la misma
+    // transacción que el usuario. Así el token siempre trae idClient y la
+    // cuenta recién registrada ya puede ordenar y ver /orders/mine.
+    const nuevoCliente: NuevoClient | null = dto.idClient
+      ? null
+      : {
+          firstName: dto.firstName?.trim() || 'Cliente',
+          lastName: dto.lastName?.trim() || 'Registrado',
+          phoneNumber: dto.phoneNumber?.trim() || telefonoTemporal(),
+        };
+
+    if (nuevoCliente && (await this.clientes.findByPhone(nuevoCliente.phoneNumber))) {
+      throw new ConflictException('Ese teléfono ya está registrado'); // RN-51
+    }
+
+    const usuario = nuevoCliente
+      ? await this.repo.guardarConCliente(
+          {
+            correo: dto.correo,
+            passwordHash,
+            rol: Rol.client,
+            idClient: null,
+          },
+          nuevoCliente,
+        )
+      : await this.repo.guardar({
+          correo: dto.correo,
+          passwordHash,
+          rol: Rol.client,
+          idClient: dto.idClient ?? null,
+        });
+
     return this.firmar(usuario); // quien se registra ya queda con sesion
   }
 
@@ -57,4 +91,10 @@ export class AuthService {
       expires_in: 3600, // 1 hora, igual que en auth.module.ts
     };
   }
+}
+
+// phoneNumber es VARCHAR(20) y único. Si el formulario no lo pide, se genera
+// un valor temporal corto y prácticamente imposible de repetir (RN-51).
+function telefonoTemporal(): string {
+  return `TMP-${Date.now().toString(36)}-${randomUUID().slice(0, 6)}`;
 }

@@ -19,6 +19,14 @@ export class PrismaClientRepository implements ClientRepository {
     return clientBd as Client;
   }
 
+  async findByPhone(phoneNumber: string): Promise<Client | null> {
+    const clientBd = await this.prisma.client.findUnique({
+      where: { phoneNumber },
+    });
+
+    return clientBd ? (clientBd as Client) : null;
+  }
+
   async findAll(): Promise<Client[]> {
     const clientsBd = await this.prisma.client.findMany();
 

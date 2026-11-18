@@ -24,7 +24,8 @@ export interface PedidoParaEstado {
   status: string;
   total: number;
   orderDetails: Array<{
-    idProduct: number;
+    idProduct?: number;
+    idBeverage?: number;
     quantity: number;
     price: number;
   }>;

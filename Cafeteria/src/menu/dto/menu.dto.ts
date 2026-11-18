@@ -95,6 +95,12 @@ export class CustomizationDto {
     @IsInt({ each: true })
     @IsPositive({ each: true })
     extraIds?: number[];
+
+    // Nota libre del cliente (ej. "poco hielo"). No afecta al precio.
+    @IsOptional()
+    @IsString()
+    @Length(1, 200)
+    note?: string;
 }
 
 export class QuoteDto {

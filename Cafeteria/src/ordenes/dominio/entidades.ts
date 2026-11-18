@@ -56,10 +56,12 @@ export abstract class OrderDetail {
     id!: number;
     quantity!: number;
     price!: number;
-    
-    // Relaciones
+
+    // Relaciones: idProduct o idBeverage (nunca ambos en una línea nueva).
     idOrder!: number;
-    idProduct!: number;
+    idProduct?: number;
+    idBeverage?: number;
+    customization?: string; // JSON con tamaño, leche, endulzante, extras y nota
 }
 
 // Al guardar, la BD todavia no asigno id/createdAt ni las relaciones.

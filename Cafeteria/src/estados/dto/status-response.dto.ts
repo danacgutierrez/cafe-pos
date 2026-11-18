@@ -20,7 +20,8 @@ export function toStatusResponse(pedido: PedidoParaEstado): OrderStatusResponseD
 }
 
 export interface RepeatedDetailDto {
-  idProduct: number;
+  idProduct?: number;
+  idBeverage?: number;
   quantity: number;
   previousPrice: number;
   currentPrice: number;

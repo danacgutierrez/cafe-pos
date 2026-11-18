@@ -1,6 +1,7 @@
 // Usuarios en memoria, para arrancar sin migracion.
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import type { Client, NuevoClient } from '../../clientes/dominio/entidades';
 import { NuevoUsuario, Rol, Usuario } from '../dominio/usuario';
 import { UsuarioRepository } from '../dominio/usuario.repository';
 
@@ -15,6 +16,7 @@ const CUENTAS: NuevoUsuario[] = [
 @Injectable()
 export class UsuarioMemoriaRepository implements UsuarioRepository {
   private readonly datos = new Map<number, Usuario>(); // id -> usuario
+  private readonly nuevosClientes = new Map<number, Client>();
   private siguienteId = 1;
 
   constructor() {
@@ -39,5 +41,21 @@ export class UsuarioMemoriaRepository implements UsuarioRepository {
     };
     this.datos.set(usuario.id, usuario);
     return usuario;
+  }
+
+  async guardarConCliente(nuevo: NuevoUsuario, cliente: NuevoClient): Promise<Usuario> {
+    // No hay base que revierta: se crea el cliente con el siguiente id libre
+    // y se liga al usuario antes de guardarlo.
+    const idCliente = Math.max(0, ...this.clientesIds()) + 1;
+    this.nuevosClientes.set(idCliente, {
+      id: idCliente,
+      ...cliente,
+      loyaltyBalance: 0,
+    });
+    return this.guardar({ ...nuevo, idClient: idCliente });
+  }
+
+  private clientesIds(): number[] {
+    return [...this.nuevosClientes.keys()];
   }
 }

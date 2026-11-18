@@ -84,6 +84,12 @@ export class InMemoryOrderRepository implements OrderRepository {
         return this.orders.find(order => order.id === id) ?? null;
     }
 
+    async findByClient(idClient: number): Promise<Order[]> {
+        return this.orders
+            .filter(order => order.idClient === idClient)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+
     async findProduct(id: number): Promise<Product | null> {
         return this.products.find(product => product.id === id) ?? null;
     }

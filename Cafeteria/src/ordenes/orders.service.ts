@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { PayloadJwt, Rol } from '../auth/dominio/usuario';
+import { MenuService } from '../menu/servicio/menu.service';
 import type { OrderRepository } from './dominio/order.repository';
 import {
     DeliveryMode,
@@ -15,6 +17,7 @@ import {
     EmptyOrderError,
     InactiveProductError,
     InsufficientPointsError,
+    InvalidOrderDetailError,
     InvalidOrderStatusError,
     NoActiveLoyaltyProgramError,
     NonClientFoundError,
@@ -28,6 +31,7 @@ export class OrdersService {
     constructor(
         @Inject(ORDER_REPOSITORY)
         private readonly repo: OrderRepository,
+        private readonly menuService: MenuService,
     ) {}
 
     async createOrder(dto: CreateOrderDto): Promise<Order> {
@@ -39,25 +43,51 @@ export class OrdersService {
         let totalAmount = 0;
 
         for (const detail of dto.details) {
-            const product = await this.repo.findProduct(detail.idProduct);
-
-            if (!product) {
-                throw new NonExistentProductError();
+            if (Boolean(detail.idProduct) === Boolean(detail.idBeverage)) {
+                throw new InvalidOrderDetailError();
             }
 
-            if (!product.isActive) {
-                throw new InactiveProductError(product.name);
+            let unitPrice: number;
+            let idProduct: number | undefined;
+            let idBeverage: number | undefined;
+            let customization: string | undefined;
+
+            if (detail.idBeverage) {
+                // RN-01/RN-06/RN-07: el sistema valida opciones y calcula el
+                // precio de la bebida personalizada; el cliente no lo fija.
+                const cotizacion = await this.menuService.quote({
+                    idBeverage: detail.idBeverage,
+                    customization: detail.customization,
+                });
+
+                unitPrice = cotizacion.total;
+                idBeverage = detail.idBeverage;
+                customization = JSON.stringify(detail.customization ?? {});
+            } else {
+                const product = await this.repo.findProduct(detail.idProduct!);
+
+                if (!product) {
+                    throw new NonExistentProductError();
+                }
+
+                if (!product.isActive) {
+                    throw new InactiveProductError(product.name);
+                }
+
+                unitPrice = product.price;
+                idProduct = product.id;
             }
 
-            // El precio viene de la BD: el cliente no puede fijarlo.
-            totalAmount += detail.quantity * product.price;
+            totalAmount += detail.quantity * Number(unitPrice);
 
             orderDetails.push({
                 id: 0,
                 idOrder: 0,
-                idProduct: product.id,
+                idProduct,
+                idBeverage,
+                customization,
                 quantity: detail.quantity,
-                price: product.price,
+                price: Number(unitPrice),
             } as OrderDetail);
         }
 
@@ -135,6 +165,19 @@ export class OrdersService {
 
     findAll(): Promise<Order[]> {
         return this.repo.findAll();
+    }
+
+    // Los clientes solo ven sus propios pedidos; el listado general sigue
+    // siendo exclusivo de administración en GET /orders.
+    async findMine(usuario: PayloadJwt): Promise<Order[]> {
+        if (!usuario.idClient) {
+            if (usuario.rol === Rol.client) {
+                throw new NonClientFoundError();
+            }
+            return [];
+        }
+
+        return this.repo.findByClient(usuario.idClient);
     }
 
     async cancel(id: number): Promise<Order | null> {

@@ -6,6 +6,7 @@ import { NewOrder } from './entidades';
 export interface OrderRepository {
     save(datos: NewOrder): Promise<Order>;
     findAll(): Promise<Order[]>;
+    findByClient(idClient: number): Promise<Order[]>;
     findProduct(id: number): Promise<Product | null>;
 
     findLoyaltyProgramActive(): Promise<LoyaltyProgram | null>;

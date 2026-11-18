@@ -8,6 +8,12 @@ export class EmptyOrderError extends DomainError {
     }
 }
 
+export class InvalidOrderDetailError extends DomainError {
+    constructor() {
+        super("Cada línea debe indicar idProduct o idBeverage, pero no ambos.", 400);
+    }
+}
+
 export class InactiveProductError extends DomainError {
     constructor(productName: string) {
         super(`El producto '${productName}' se encuentra inactivo y no puede ser vendido.`);

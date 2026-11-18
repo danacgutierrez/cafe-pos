@@ -14,7 +14,7 @@ export class PaymentNotFoundError extends DomainError {
 
 export class UnauthorizedPaymentError extends DomainError {
     constructor() {
-        super('Solo el staff o la dueña pueden confirmar pagos en efectivo o transferencia (RN-20).', 403);
+        super('Solo el personal puede aprobar o rechazar pagos.', 403);
     }
 }
 

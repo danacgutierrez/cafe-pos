@@ -1,9 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { PayloadJwt, Rol } from '../../auth/dominio/usuario';
 import { Payment, PaymentMethod, PaymentStatus } from '../dominio/entidades';
 import {
     InvalidPaymentStatusError,
-    MissingPaymentReferenceError,
     OrderNotFoundError,
     PaymentAlreadyProcessedError,
     PaymentNotFoundError,
@@ -23,34 +23,43 @@ export class PaymentsService {
             throw new OrderNotFoundError();
         }
 
-        // RN-20: el cliente no confirma su propio efectivo/transferencia.
-        if (dto.method !== PaymentMethod.CARD && usuario.rol === Rol.client) {
-            throw new UnauthorizedPaymentError();
+        // Un cliente solo puede pagar sus propios pedidos.
+        if (
+            usuario.rol === Rol.client &&
+            (!pedido.idClient || usuario.idClient !== pedido.idClient)
+        ) {
+            throw new ForbiddenException('Solo puedes pagar tus propios pedidos');
         }
 
         // RN-22: el monto es el total congelado del pedido.
         const amount = pedido.total;
+        let providerPaymentId = dto.providerPaymentId;
+        let status: PaymentStatus;
 
-        if (dto.method === PaymentMethod.CARD) {
-            if (!dto.providerPaymentId) {
-                throw new MissingPaymentReferenceError();
-            }
-
+        if (dto.method === PaymentMethod.CARD && providerPaymentId) {
             // RN-23: una referencia aprobada no se procesa dos veces.
-            if (await this.repo.findApprovedByProvider(dto.providerPaymentId)) {
+            if (await this.repo.findApprovedByProvider(providerPaymentId)) {
                 throw new PaymentAlreadyProcessedError();
             }
+            // RN-18: con proveedor real el cobro queda PENDING hasta el webhook.
+            status = PaymentStatus.PENDING;
+        } else if (dto.method === PaymentMethod.CARD) {
+            // Modo demo (sin pasarela): se genera una referencia y se aprueba
+            // al registrar para que el flujo del cliente pueda continuar.
+            providerPaymentId = `DEMO-${randomUUID()}`;
+            status = PaymentStatus.APPROVED;
+        } else {
+            // Efectivo y transferencia se confirman al registrar: se paga en
+            // sucursal o al recibir, sin datos de tarjeta (RN-21).
+            status = PaymentStatus.APPROVED;
         }
-
-        // RN-18: tarjeta espera aprobación; efectivo/transferencia confirman al registrar.
-        const status = dto.method === PaymentMethod.CARD ? PaymentStatus.PENDING : PaymentStatus.APPROVED;
 
         return await this.repo.create({
             idOrder: pedido.id,
             method: dto.method,
             amount,
             status,
-            providerPaymentId: dto.providerPaymentId,
+            providerPaymentId,
         });
     }
 

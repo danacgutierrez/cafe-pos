@@ -398,3 +398,80 @@ Authorization: Bearer {{tokenKarla}}
 ### 46. Clienta intenta ver todos los movimientos -> 403 (RN-50: solo la dueña)
 GET {{host}}/rewards/movements
 Authorization: Bearer {{tokenKarla}}
+
+
+### ==========================================
+### Soporte para la app de cliente (Cafepos)
+### ==========================================
+
+### 47. Historial del propio cliente -> 200 (el admin sigue usando GET /orders)
+GET {{host}}/orders/mine
+Authorization: Bearer {{tokenKarla}}
+
+### 48. Pedido con una bebida personalizada del menú -> 201
+### El precio lo calcula POST /menu/quote; el detalle guarda idBeverage + customization.
+POST {{host}}/orders
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{
+  "idClient": 1,
+  "deliveryMode": "PICKUP",
+  "fulfillmentType": "IMMEDIATE",
+  "details": [
+    {
+      "idBeverage": 1,
+      "quantity": 1,
+      "customization": {
+        "sizeId": 1,
+        "milkId": 2,
+        "sweetenerId": 3,
+        "sweetness": 50,
+        "extraIds": [4],
+        "note": "poco hielo"
+      }
+    }
+  ]
+}
+
+### 49. Cliente paga en efectivo -> 201 APPROVED (se paga al recoger)
+POST {{host}}/payments
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{ "idOrder": 1, "method": "CASH" }
+
+### 50. Cliente paga con tarjeta sin proveedor (modo demo) -> 201 APPROVED
+### Con providerPaymentId el estado queda PENDING hasta el webhook o aprobación de staff.
+POST {{host}}/payments
+Authorization: Bearer {{tokenKarla}}
+Content-Type: application/json
+
+{ "idOrder": 1, "method": "CARD" }
+
+
+### 51. Registro nuevo -> 201 con idClient ya vinculado en el token
+### El Client se crea en la misma transacción; no hace falta enviar idClient.
+### phoneNumber es único (RN-51). Si se omite, se genera uno temporal.
+# @name registroNuevo
+POST {{host}}/auth/registro
+Content-Type: application/json
+
+{
+  "correo": "cliente.nuevo@itson.mx",
+  "password": "cafeteria2026",
+  "firstName": "Nuevo",
+  "lastName": "Cliente",
+  "phoneNumber": "5551234567"
+}
+
+###
+@tokenNuevo = {{registroNuevo.response.body.data.access_token}}
+
+### 52. El token del registro ya trae idClient y puede ordenar -> 200
+GET {{host}}/auth/yo
+Authorization: Bearer {{tokenNuevo}}
+
+### 53. Historial del cliente recién registrado -> 200 (lista vacía al inicio)
+GET {{host}}/orders/mine
+Authorization: Bearer {{tokenNuevo}}

@@ -98,22 +98,39 @@ export class StatusService {
     let total = 0;
 
     for (const detalle of pedido.orderDetails) {
-      let producto = productos.get(detalle.idProduct);
+      let currentPrice = Number(detalle.price);
+      let isActive = false;
 
-      if (!producto) {
-        producto = (await this.repo.findProduct(detalle.idProduct)) ?? undefined;
-        if (producto) {
-          productos.set(detalle.idProduct, producto);
+      if (detalle.idProduct) {
+        let producto = productos.get(detalle.idProduct);
+
+        if (!producto) {
+          producto = (await this.repo.findProduct(detalle.idProduct)) ?? undefined;
+          if (producto) {
+            productos.set(detalle.idProduct, producto);
+          }
         }
-      }
 
-      const currentPrice = producto ? Number(producto.price) : 0;
-      const isActive = producto?.isActive ?? false;
+        currentPrice = producto ? Number(producto.price) : 0;
+        isActive = producto?.isActive ?? false;
 
-      if (!producto || !isActive) {
-        warnings.push(
-          `El producto ${detalle.idProduct} ya no está activo; elige un reemplazo.`,
-        );
+        if (!producto || !isActive) {
+          warnings.push(
+            `El producto ${detalle.idProduct} ya no está activo; elige un reemplazo.`,
+          );
+        }
+      } else if (detalle.idBeverage) {
+        const bebida = await this.repo.findBeverage(detalle.idBeverage);
+        currentPrice = bebida ? Number(bebida.basePrice) : currentPrice;
+        isActive = bebida?.isActive ?? false;
+
+        if (!bebida || !isActive) {
+          warnings.push(
+            `La bebida ${detalle.idBeverage} ya no está activa; elige un reemplazo.`,
+          );
+        }
+      } else {
+        warnings.push('Hay una línea sin producto ni bebida; revisa el pedido.');
       }
 
       if (isActive) {
@@ -122,6 +139,7 @@ export class StatusService {
 
       detalles.push({
         idProduct: detalle.idProduct,
+        idBeverage: detalle.idBeverage,
         quantity: detalle.quantity,
         previousPrice: Number(detalle.price),
         currentPrice,
@@ -145,6 +163,7 @@ export class StatusService {
       total: Number(order.total),
       orderDetails: (order.orderDetails ?? []).map((detalle) => ({
         idProduct: detalle.idProduct,
+        idBeverage: detalle.idBeverage,
         quantity: detalle.quantity,
         price: Number(detalle.price),
       })),

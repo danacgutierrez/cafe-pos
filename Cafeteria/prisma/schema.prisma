@@ -64,14 +64,21 @@ model OrderDetail {
   quantity Int
   price    Float
 
-  idOrder   Int
-  idProduct Int
+  // Una línea viene del catálogo (idProduct) o del menú personalizado
+  // (idBeverage + customization en JSON). El precio siempre queda congelado.
+  idOrder    Int
+  idProduct  Int?
+  idBeverage Int?
 
-  order   Order   @relation(fields: [idOrder], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [idProduct], references: [id])
+  customization String? @db.Text
+
+  order    Order     @relation(fields: [idOrder], references: [id], onDelete: Cascade)
+  product  Product?  @relation(fields: [idProduct], references: [id])
+  beverage Beverage? @relation(fields: [idBeverage], references: [id])
 
   @@index([idOrder])
   @@index([idProduct])
+  @@index([idBeverage])
   @@map("order_details")
 }
 
@@ -177,9 +184,10 @@ model Beverage {
   isActive    Boolean @default(false) // RN-03: requiere receta para activarse
   allowsMilk  Boolean @default(true)  // RN-06
 
-  drinkType DrinkType @relation(fields: [idDrinkType], references: [id])
-  flavor    Flavor    @relation(fields: [idFlavor], references: [id])
-  recipe    Recipe?
+  drinkType    DrinkType     @relation(fields: [idDrinkType], references: [id])
+  flavor       Flavor        @relation(fields: [idFlavor], references: [id])
+  recipe       Recipe?
+  orderDetails OrderDetail[]
 
   @@index([idDrinkType])
   @@index([idFlavor])
