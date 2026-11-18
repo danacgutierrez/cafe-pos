@@ -1,3 +1,7 @@
+BACKEND:
+
+
+
 Es necesario tener instalado MySQL80 pues es la base de datos que se utiliza. También
 VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las pruebas.
 
@@ -18,4 +22,18 @@ VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las 
 6.- Instalar o tener instalada la extensión REST Client de VSCode para poder ejecutar
 
 &#x20;   las peticiones HTTP del archivo "peticiones.http"
+
+
+
+FRONTEND:
+
+1.- Entrar dentro de la raíz "Cafetería
+
+2.- Ejecutar el comando: npm install
+
+3.- Ejecutar el comando: npm run dev
+
+4.- Entrar a http://localhost:5123/ en un navegador
+
+
 
