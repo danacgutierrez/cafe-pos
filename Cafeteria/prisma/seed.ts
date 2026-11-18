@@ -71,6 +71,14 @@ async function main() {
       { id: 2, kind: 'MILK', name: 'Leche de avena', surcharge: 0.75 },
       { id: 3, kind: 'SWEETENER', name: 'Stevia', surcharge: 0 },
       { id: 4, kind: 'EXTRA', name: 'Crema', surcharge: 0.5 },
+      { id: 5, kind: 'SIZE', name: 'Pequeño', surcharge: 0 },
+      { id: 6, kind: 'SIZE', name: 'Mediano', surcharge: 0.5 },
+      { id: 7, kind: 'MILK', name: 'Leche entera', surcharge: 0 },
+      { id: 8, kind: 'MILK', name: 'Leche de almendra', surcharge: 1.0 },
+      { id: 9, kind: 'SWEETENER', name: 'Azúcar', surcharge: 0 },
+      { id: 10, kind: 'SWEETENER', name: 'Sin endulzante', surcharge: 0 },
+      { id: 11, kind: 'EXTRA', name: 'Chocolate', surcharge: 0.75 },
+      { id: 12, kind: 'EXTRA', name: 'Canela', surcharge: 0.25 },
     ],
   });
 

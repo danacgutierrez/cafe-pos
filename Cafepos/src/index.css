@@ -200,10 +200,6 @@ button, input, select { font: inherit; }
 .formulario__bajada { color: var(--gris); font-size: 0.9rem; }
 .formulario__dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
 .formulario__pie { margin: 1rem 0 0; font-size: 0.88rem; text-align: center; color: var(--gris); }
-.tarjeta-demo { width: min(300px, 100%); margin-top: 1rem; padding: 1.2rem; background: var(--azul-pastel); border-radius: var(--radio); }
-.tarjeta-demo h2 { font-size: 1.1rem; }
-.tarjeta-demo p { font-size: 0.9rem; margin-bottom: 0.35rem; }
-.tarjeta-demo__nota { color: var(--gris); font-size: 0.8rem !important; }
 
 /* ---------- Checkout ---------- */
 .checkout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }

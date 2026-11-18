@@ -71,7 +71,7 @@ export default function PaginaCarrito() {
           {usuario ? (
             <Link to="/checkout" className="boton boton--ancho">Continuar al pago</Link>
           ) : (
-            <Link to="/entrar" state={{ desde: '/checkout' }} className="boton boton--ancho">
+            <Link to="/entrar" className="boton boton--ancho">
               Entra para continuar
             </Link>
           )}

@@ -1,6 +1,8 @@
 // La sesión se comparte por contexto; el carrito y el catálogo viven en Zustand.
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 import * as servicio from '../servicios/sesion.ts';
+import { useCarrito } from '../../carrito/estado/carrito.ts';
 import type { DatosRegistro } from '../servicios/sesion.ts';
 import type { PayloadJwt, Sesion } from '../../../compartido/api/tipos.ts';
 
@@ -26,6 +28,7 @@ function leerUsuario(): PayloadJwt | null {
 }
 
 export function ProveedorSesion({ children }: { children: ReactNode }) {
+  const navegar = useNavigate();
   const [usuario, setUsuario] = useState<PayloadJwt | null>(leerUsuario);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -47,8 +50,11 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   function salir() {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    // El carrito es del cliente que está entrando: se vacía al cerrar sesión.
+    useCarrito.getState().vaciar();
     setAviso(null);
     setUsuario(null);
+    navegar('/entrar', { replace: true });
   }
 
   useEffect(() => {

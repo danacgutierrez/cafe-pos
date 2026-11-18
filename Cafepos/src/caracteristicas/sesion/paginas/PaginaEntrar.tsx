@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useSesion } from '../contexto/SesionContext.tsx';
 import { Campo } from '../../../compartido/componentes/Campo.tsx';
 import { mensajeDeError } from '../../../compartido/api/errores.ts';
@@ -12,7 +12,6 @@ interface Errores {
 export default function PaginaEntrar() {
   const { entrar } = useSesion();
   const navegar = useNavigate();
-  const desde = (useLocation().state as { desde?: string } | null)?.desde ?? '/menu';
 
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +37,7 @@ export default function PaginaEntrar() {
     setEnviando(true);
     try {
       await entrar(correo.trim(), password);
-      navegar(desde, { replace: true });
+      navegar('/menu', { replace: true });
     } catch (e) {
       const mensaje = mensajeDeError(e, 'No se pudo iniciar sesión.');
       if (mensaje.includes('Correo o contraseña')) setErrores({ password: mensaje });
@@ -89,11 +88,6 @@ export default function PaginaEntrar() {
         </button>
         <p className="formulario__pie">¿No tienes cuenta? <Link to="/registro">Regístrate</Link></p>
       </form>
-      <aside className="tarjeta-demo">
-        <h2>Prueba rápida</h2>
-        <p><strong>karla@itson.mx</strong> · cafeteria2026</p>
-        <p className="tarjeta-demo__nota">Cuenta de cliente con pedidos y puntos.</p>
-      </aside>
     </div>
   );
 }

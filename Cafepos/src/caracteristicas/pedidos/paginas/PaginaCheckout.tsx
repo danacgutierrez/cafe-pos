@@ -32,7 +32,7 @@ export default function PaginaCheckout() {
     return (
       <div className="vacio">
         <h1>Necesitas una cuenta</h1>
-        <Link to="/entrar" state={{ desde: '/checkout' }} className="boton">Entrar</Link>
+        <Link to="/entrar" className="boton">Entrar</Link>
       </div>
     );
   }
