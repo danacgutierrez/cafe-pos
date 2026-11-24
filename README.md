@@ -27,11 +27,47 @@ VSCode, ya que es el editor en el cual está la extensión CLIENT Rest para las 
 
 FRONTEND:
 
-1.- Entrar dentro de la raíz "frontend-cafepos"
+1. Entrar en la carpeta `frontend-cafepos`.
 
-2.- Ejecutar el comando: npm install
+2. Instalar las dependencias:
 
-3.- Ejecutar el comando: npm run dev
+   npm ci
 
-4.- Entrar a http://localhost:5123/ en un navegador
+3. Copiar el archivo `.env.example` como `.env`.
 
+   En PowerShell:
+
+   Copy-Item .env.example .env
+
+4. Configurar `VITE_API_URL` con la URL del backend.
+   Para desarrollo local:
+
+   VITE_API_URL=http://localhost:3000
+
+   Si no se define esta variable, Vite utiliza
+   http://localhost:3000 como valor predeterminado.
+
+5. Verificar que el backend se encuentre en ejecución.
+
+6. Iniciar el frontend:
+
+   npm run dev
+
+7. Abrir http://localhost:5173/ en el navegador.
+
+### Verificaciones del frontend
+
+Compilar el proyecto:
+
+    npm run build
+
+Revisar la calidad del código:
+
+    npm run lint
+
+Ejecutar las pruebas automatizadas (Node.js 24):
+
+    node --test tests/errores.test.mjs
+
+Los archivos `.env` locales no deben subirse al repositorio.
+El archivo `.env.example` sirve como plantilla de configuración.
