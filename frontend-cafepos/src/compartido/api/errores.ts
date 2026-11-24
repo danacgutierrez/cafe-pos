@@ -51,12 +51,62 @@ export function traducirMensaje(mensaje: string): string {
   return mensaje;
 }
 
+// Mensajes para conflictos de negocio (HTTP 409).
+const CONFLICTOS: Record<string, string> = {
+  InsufficientStockError: 'No hay suficientes ingredientes para preparar tu pedido. Reduce la cantidad o modifica tu selección.',
+  InactiveProductError: 'Un producto de tu carrito ya no está disponible. Actualiza tu selección.',
+  NonExistentProductError: 'Un producto ya no existe en el catálogo. Actualiza tu carrito.',
+  DisabledOptionError: 'Una opción seleccionada ya no está disponible. Elige otra opción.',
+  FlavorNotAllowedError: 'El sabor seleccionado no está disponible para esta bebida.',
+  MilkNotAllowedError: 'Esta bebida no admite leche. Modifica tu selección.',
+  InsufficientPointsError: 'No tienes suficientes puntos para este canje. Puedes continuar sin utilizarlos.',
+  NoActiveLoyaltyProgramError: 'El programa de recompensas no está disponible actualmente.',
+  DuplicatePhoneError: 'Este teléfono ya está registrado.',
+  MultipleFreeDrinksError: 'Solo puedes canjear una bebida gratis por pedido.',
+  InvalidOrderStatusError: 'El estado actual del pedido no permite esta operación.',
+  InvalidStatusTransitionError: 'No se puede realizar este cambio en el estado del pedido.',
+  OrderAlreadyFinalError: 'El pedido ya fue entregado o cancelado y no puede modificarse.',
+  PaymentNotApprovedError: 'El pago todavía no ha sido aprobado.',
+  PaymentAlreadyProcessedError: 'Este pago ya fue aprobado. Consulta el estado de tu pedido.',
+  InvalidPaymentStatusError: 'El estado actual del pago no permite esta operación.',
+};
+
+function mensajeDeConflicto(e: unknown): string {
+  const datos = comoErrorApi(e)?.response?.data as
+    { error?: unknown } | undefined;
+
+  const tipo = datos?.error;
+
+  if (
+    typeof tipo === 'string' &&
+    Object.prototype.hasOwnProperty.call(CONFLICTOS, tipo)
+  ) {
+    return CONFLICTOS[tipo];
+  }
+
+  const mensaje = mensajesDelServicio(e).join(' ');
+
+  if (/correo.*registrado/i.test(mensaje)) {
+    return 'Este correo ya está registrado.';
+  }
+
+  if (/tel[eé]fono.*registrado/i.test(mensaje)) {
+    return CONFLICTOS.DuplicatePhoneError;
+  }
+
+  return 'No se pudo completar la operación debido a un conflicto. Revisa tu selección o consulta el estado actual antes de continuar.';
+}
+
 /** Mensaje para un aviso general. Nunca devuelve texto técnico. */
 export function mensajeDeError(e: unknown, generico: string): string {
   const error = comoErrorApi(e);
   if (error?.response?.status === 401 && error.config?.url !== '/auth/login') {
     return 'Tu sesión terminó. Vuelve a entrar.';
   }
+  if (error?.response?.status === 409) {
+    return mensajeDeConflicto(e);
+  }
+
   const mensajes = mensajesDelServicio(e).map(traducirMensaje);
   if (mensajes.length === 0) return generico;
   return [...new Set(mensajes)].join('. ');
