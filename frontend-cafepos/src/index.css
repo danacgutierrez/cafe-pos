@@ -281,7 +281,26 @@ button, input, select { font: inherit; }
 @media (max-width: 860px) {
   .carrito, .checkout, .seguimiento, .perfil { grid-template-columns: 1fr; }
   .puntos { grid-template-columns: 1fr; }
-  .barra__enlaces { display: none; }
+  .barra__interior {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .barra__interior nav {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+  }
+  .barra__enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .barra__sesion {
+    min-width: 0;
+  }
+  .barra__usuario {
+    overflow-wrap: anywhere;
+  }
 }
 @media (max-width: 520px) {
   .hero { padding: 1.8rem 1.3rem; }
