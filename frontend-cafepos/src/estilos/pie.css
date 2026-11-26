@@ -1,0 +1,3 @@
+/* ---------- Pie ---------- */
+.pie { border-top: 1px solid var(--linea); background: var(--blanco); padding: 1.1rem 1.2rem; text-align: center; font-size: 0.85rem; color: var(--gris); }
+.pie p { margin: 0; }

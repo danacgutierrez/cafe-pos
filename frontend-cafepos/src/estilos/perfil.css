@@ -1,0 +1,11 @@
+/* ---------- Perfil ---------- */
+.perfil { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+.perfil__avatar { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--azul); color: var(--blanco); font-family: 'Baloo 2', sans-serif; font-size: 2rem; margin-bottom: 0.6rem; }
+.perfil__datos { display: grid; gap: 0.5rem; margin: 1rem 0; }
+.perfil__datos div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--linea); padding-bottom: 0.35rem; }
+.perfil__datos dt { color: var(--gris); font-size: 0.88rem; }
+.perfil__datos dd { margin: 0; font-weight: 600; }
+.perfil__acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+.perfil__formulario { margin-top: 1rem; border-top: 1px dashed var(--linea); padding-top: 1rem; }
+.perfil__formulario h3 { margin-top: 0; }
+.perfil .resumen .boton + .boton { margin-top: 0.2rem; }

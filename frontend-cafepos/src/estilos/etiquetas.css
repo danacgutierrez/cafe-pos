@@ -1,0 +1,4 @@
+/* ---------- Etiquetas ---------- */
+.etiqueta { display: inline-block; align-self: flex-start; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; background: var(--azul-pastel); color: var(--azul); }
+.etiqueta--numero { background: var(--mantequilla); color: var(--marino); }
+.etiqueta--verde { background: var(--verde-claro); color: #2f5a1c; }

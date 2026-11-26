@@ -1,0 +1,19 @@
+/* ---------- Recompensas ---------- */
+.puntos { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1.2rem; }
+.puntos__saldo { background: linear-gradient(135deg, var(--verde), #3d6b27); color: var(--blanco); border-radius: var(--radio); padding: 1.4rem; text-align: center; }
+.puntos__etiqueta { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; color: var(--verde-claro); margin: 0; }
+.puntos__numero { display: block; font-family: 'Baloo 2', sans-serif; font-size: 4rem; line-height: 1; color: var(--blanco); }
+.puntos__unidad { margin: 0.2rem 0 0.6rem; font-size: 0.9rem; }
+.puntos__progreso { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 1.4rem; }
+.barra-progreso { height: 12px; border-radius: 999px; background: var(--mantequilla); overflow: hidden; margin: 0.8rem 0; }
+.barra-progreso__relleno { height: 100%; background: linear-gradient(90deg, var(--coral), var(--coral-claro)); border-radius: 999px; transition: width 0.4s; }
+.puntos__nota { font-size: 0.85rem; color: var(--gris); margin: 0.6rem 0 0; }
+.fila-busqueda { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.fila-busqueda .campo__control { width: auto; min-width: 240px; flex: 1; }
+.movimientos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.movimiento { display: flex; justify-content: space-between; align-items: center; background: var(--blanco); border: 1px solid var(--linea); border-radius: 12px; padding: 0.7rem 1rem; }
+.movimiento p { margin: 0; }
+.movimiento__puntos { text-align: right; }
+.movimiento__puntos small { display: block; color: var(--gris); font-size: 0.75rem; }
+.texto-verde { color: var(--verde); }
+.texto-coral { color: var(--coral); }

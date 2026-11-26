@@ -1,0 +1,23 @@
+/* ---------- Modal del personalizador ---------- */
+.modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem; background: rgba(15, 31, 74, 0.55); backdrop-filter: blur(3px); }
+.modal__panel { width: min(560px, 100%); max-height: 92vh; overflow: auto; background: var(--blanco); border-radius: 22px; box-shadow: var(--sombra-alta); }
+.modal__encabezado { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.3rem 1.4rem 0.8rem; border-bottom: 1px solid var(--linea); }
+.modal__encabezado h2 { margin-top: 0.35rem; }
+.icono-cerrar { border: none; background: var(--mantequilla); color: var(--marino); width: 2.1rem; height: 2.1rem; border-radius: 50%; cursor: pointer; font-weight: 700; }
+.modal__cuerpo { padding: 1.1rem 1.4rem; }
+.modal__pie { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.4rem; border-top: 1px solid var(--linea); position: sticky; bottom: 0; background: var(--blanco); }
+.modal__precio { display: flex; flex-direction: column; }
+.modal__precio span { font-size: 0.78rem; color: var(--gris); text-transform: uppercase; letter-spacing: 0.08em; }
+.modal__precio strong { font-family: 'DM Sans', sans-serif; font-size: 1.6rem; color: var(--verde); }
+
+/* ---------- Opciones ---------- */
+.opciones { border: none; padding: 0; margin: 0 0 1.1rem; }
+.opciones legend { font-weight: 700; color: var(--marino); margin-bottom: 0.45rem; padding: 0; }
+.opciones__lista { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.opciones__lista--horizontal { margin-bottom: 1rem; }
+.opcion { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; border: 1.5px solid var(--linea); background: var(--blanco); color: var(--gris); border-radius: 12px; padding: 0.5rem 0.85rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+.opcion:hover { border-color: var(--verde); }
+.opcion--activa { border-color: var(--verde); background: var(--verde-claro); color: #2f5a1c; }
+.opcion small { font-weight: 500; font-size: 0.75rem; opacity: 0.8; }
+.opcion--pago { flex: 1; min-width: 140px; }
+.deslizador { width: 100%; accent-color: var(--coral); }

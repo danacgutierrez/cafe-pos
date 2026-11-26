@@ -1,0 +1,7 @@
+/* ---------- Autenticación ---------- */
+.autenticacion { display: flex; gap: 1.5rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.formulario { width: min(420px, 100%); margin: 1rem auto; padding: 1.8rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); box-shadow: var(--sombra); }
+.formulario__marca { font-family: 'Baloo 2', sans-serif; font-weight: 800; color: var(--coral); margin-bottom: 0.3rem; }
+.formulario__bajada { color: var(--gris); font-size: 0.9rem; }
+.formulario__dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.formulario__pie { margin: 1rem 0 0; font-size: 0.88rem; text-align: center; color: var(--gris); }

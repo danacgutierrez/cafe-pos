@@ -1,0 +1,5 @@
+/* ---------- Checkout ---------- */
+.checkout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }
+.checkout__columnas { display: grid; gap: 1rem; }
+.tarjeta-form { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 1.3rem; box-shadow: var(--sombra); }
+.tarjeta-form h2 { margin-bottom: 0.9rem; }

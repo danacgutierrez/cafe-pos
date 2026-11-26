@@ -1,0 +1,9 @@
+/* ---------- Cargando / error / vacío ---------- */
+.cargando { padding: 3rem 0; text-align: center; color: var(--gris); }
+.cargando__rueda { width: 42px; height: 42px; margin: 0 auto 0.8rem; border: 4px solid var(--azul-pastel); border-top-color: var(--azul); border-radius: 50%; animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.error { padding: 1.4rem; text-align: center; background: #fbe9e7; border: 1px solid var(--rojo); border-radius: var(--radio); color: var(--rojo); }
+.error .boton { margin-top: 0.8rem; background: var(--rojo); }
+.vacio { padding: 3.5rem 1rem; text-align: center; }
+.vacio__codigo { font-family: 'Baloo 2', sans-serif; font-size: 4rem; font-weight: 800; line-height: 1; color: var(--azul-pastel); }
+.vacio__icono { font-size: 3rem; margin-bottom: 0.5rem; }

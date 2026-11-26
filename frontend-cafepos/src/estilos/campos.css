@@ -1,0 +1,13 @@
+/* ---------- Campos ---------- */
+.campo { display: block; margin-bottom: 0.95rem; }
+.campo__etiqueta { display: block; margin-bottom: 0.3rem; font-size: 0.85rem; font-weight: 700; color: var(--marino); }
+.campo__control { width: 100%; padding: 0.6rem 0.75rem; border: 1.5px solid var(--linea); border-radius: 10px; font-family: 'DM Sans', sans-serif; background: var(--blanco); color: var(--marino); }
+.campo__control:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px var(--azul-pastel); }
+.campo__error { display: block; margin-top: 0.3rem; font-size: 0.8rem; font-weight: 700; color: var(--rojo); }
+.campo--invalido .campo__control { border-color: var(--rojo); background: #fff8f7; }
+.campo__control[aria-invalid='true']:focus { box-shadow: 0 0 0 3px #f9c9bc; }
+
+.aviso-sesion { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.7rem 1rem; background: var(--rojo); color: #fff; font-weight: 700; text-align: center; }
+.aviso-sesion .enlace { color: inherit; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
+.casilla { display: flex; align-items: center; gap: 0.55rem; font-size: 0.9rem; color: var(--gris); cursor: pointer; margin-top: 0.6rem; }
+.casilla input { width: 1.1rem; height: 1.1rem; accent-color: var(--verde); }

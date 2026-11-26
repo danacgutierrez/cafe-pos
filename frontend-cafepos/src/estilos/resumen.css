@@ -1,0 +1,11 @@
+/* ---------- Resumen ---------- */
+.resumen { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 1.2rem; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 0.7rem; }
+.resumen h2 { margin: 0; }
+.resumen__fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.resumen__fila--total { border-top: 1px dashed var(--linea); padding-top: 0.7rem; font-size: 1.05rem; }
+.resumen__fila--total strong { color: var(--verde); font-size: 1.3rem; }
+.resumen__nota { font-size: 0.8rem; color: var(--gris); }
+.resumen__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; font-size: 0.9rem; }
+.resumen__items li { display: flex; justify-content: space-between; gap: 0.6rem; }
+.resumen__volver { text-align: center; font-size: 0.88rem; }
+.resumen__vaciar { align-self: center; }

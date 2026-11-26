@@ -1,0 +1,13 @@
+/* ---------- Carrito ---------- */
+.carrito { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }
+.carrito__lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.item-carrito { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: 14px; box-shadow: var(--sombra); }
+.item-carrito__icono { display: grid; place-items: center; width: 56px; height: 56px; flex: none; border-radius: 12px; background: var(--mantequilla); font-size: 1.8rem; }
+.item-carrito__info { flex: 1; min-width: 0; }
+.item-carrito__info h3 { margin: 0 0 0.1rem; }
+.item-carrito__nota { font-size: 0.8rem; color: var(--gris); margin: 0 0 0.2rem; }
+.item-carrito__cantidad { display: flex; align-items: center; gap: 0.5rem; }
+.item-carrito__cantidad button { width: 1.9rem; height: 1.9rem; border-radius: 50%; border: 1px solid var(--azul-pastel); background: var(--blanco); color: var(--azul); cursor: pointer; font-weight: 700; }
+.item-carrito__precio { min-width: 72px; text-align: right; color: var(--verde); }
+.enlace-peligro { border: none; background: none; color: var(--rojo); cursor: pointer; font-size: 0.8rem; padding: 0; text-decoration: underline; }
+.enlace { font-weight: 700; }

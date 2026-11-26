@@ -1,0 +1,7 @@
+/* ---------- Estados ---------- */
+.estado { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--azul-pastel); color: var(--azul); font-size: 0.82rem; font-weight: 700; }
+.estado--pending { background: var(--mantequilla); color: #8a6a00; }
+.estado--in_progress { background: var(--azul-pastel); color: var(--azul); }
+.estado--ready { background: var(--verde-claro); color: #2f5a1c; }
+.estado--completed, .estado--approved { background: var(--verde-claro); color: #2f5a1c; }
+.estado--cancelled, .estado--rejected { background: var(--coral-claro); color: var(--rojo); }

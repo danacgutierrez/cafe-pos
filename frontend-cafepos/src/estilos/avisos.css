@@ -1,0 +1,7 @@
+/* ---------- Avisos ---------- */
+.aviso { margin-bottom: 0.9rem; padding: 0.65rem 0.85rem; border-radius: 10px; font-size: 0.9rem; }
+.aviso--error { background: #fbe9e7; color: var(--rojo); }
+.aviso--exito { background: var(--verde-claro); color: #2f5a1c; }
+.aviso--info { background: var(--azul-pastel); color: var(--azul); }
+.aviso--flotante { position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 40; box-shadow: var(--sombra-alta); animation: desaparecer 2.6s forwards; }
+@keyframes desaparecer { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }

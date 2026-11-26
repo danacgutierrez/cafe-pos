@@ -1,0 +1,8 @@
+/* ---------- Botones ---------- */
+.boton { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border: 1px solid transparent; border-radius: 999px; padding: 0.6rem 1.25rem; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.92rem; cursor: pointer; text-decoration: none; background: var(--azul); color: var(--blanco); transition: transform 0.12s, filter 0.12s, box-shadow 0.12s; }
+.boton:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: var(--sombra); }
+.boton:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.boton--secundario { background: var(--blanco); color: var(--azul); border-color: var(--azul-pastel); }
+.boton--peligro { background: var(--rojo); color: var(--blanco); }
+.boton--chico { padding: 0.35rem 0.85rem; font-size: 0.82rem; }
+.boton--ancho { width: 100%; }

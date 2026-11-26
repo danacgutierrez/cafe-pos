@@ -1,0 +1,29 @@
+/* ---------- Hero ---------- */
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; background: linear-gradient(120deg, var(--azul), var(--marino)); color: var(--blanco); border-radius: 26px; padding: 2.6rem 2.4rem; margin-bottom: 2.2rem; overflow: hidden; position: relative; }
+.hero__texto { max-width: 40rem; position: relative; z-index: 1; }
+.hero__eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; font-weight: 700; color: var(--coral-claro); margin-bottom: 0.4rem; }
+.hero h1 { color: var(--blanco); }
+.hero h1 em { color: var(--mantequilla); font-style: normal; }
+.hero__bajada { color: var(--azul-pastel); max-width: 46ch; margin-bottom: 1.2rem; }
+.hero .boton { background: var(--coral); color: var(--blanco); }
+.hero__adorno { font-size: 8rem; line-height: 1; opacity: 0.35; transform: rotate(-12deg); }
+
+/* ---------- Secciones ---------- */
+.seccion { margin-top: 2.4rem; }
+.seccion__encabezado { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filtros { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filtro { border: 1px solid var(--linea); background: var(--blanco); color: var(--gris); border-radius: 999px; padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.filtro--activo { background: var(--verde); color: var(--blanco); border-color: var(--verde); }
+
+/* ---------- Tarjetas del menú ---------- */
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.1rem; }
+.tarjeta { display: flex; flex-direction: column; overflow: hidden; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); box-shadow: var(--sombra); transition: box-shadow 0.15s, transform 0.15s; }
+.tarjeta:hover { box-shadow: var(--sombra-alta); transform: translateY(-3px); }
+.tarjeta__icono { display: grid; place-items: center; height: 110px; font-size: 3.4rem; background: linear-gradient(135deg, var(--mantequilla), var(--coral-claro)); }
+.tarjeta--producto .tarjeta__icono { background: linear-gradient(135deg, var(--verde-claro), var(--mantequilla)); }
+.tarjeta__cuerpo { display: flex; flex-direction: column; gap: 0.45rem; flex: 1; padding: 1rem; }
+.tarjeta__titulo { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+.tarjeta__titulo h3 { margin: 0; }
+.tarjeta__titulo strong { color: var(--verde); white-space: nowrap; }
+.tarjeta__meta { font-size: 0.85rem; color: var(--gris); margin: 0; flex: 1; }
+.tarjeta .boton { margin-top: 0.4rem; }

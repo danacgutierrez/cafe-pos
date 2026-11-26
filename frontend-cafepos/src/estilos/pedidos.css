@@ -1,0 +1,19 @@
+/* ---------- Pedidos ---------- */
+.pedidos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+.pedido { background: var(--blanco); border: 1px solid var(--linea); border-radius: 14px; padding: 1rem 1.1rem; box-shadow: var(--sombra); }
+.pedido__principal { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.pedido__numero { display: flex; align-items: center; gap: 0.6rem; }
+.pedido__fecha { font-size: 0.8rem; color: var(--gris); }
+.pedido__detalle { font-size: 0.85rem; color: var(--gris); margin: 0.6rem 0; }
+.pedido__pie { display: flex; justify-content: space-between; align-items: center; }
+.pedido__pie strong { color: var(--verde); font-size: 1.15rem; }
+
+/* ---------- Seguimiento ---------- */
+.seguimiento { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; }
+.linea-tiempo { list-style: none; margin: 1.2rem 0; padding: 0; display: grid; gap: 0; }
+.linea-tiempo__paso { display: flex; align-items: center; gap: 0.8rem; padding: 0.45rem 0; color: var(--gris); position: relative; }
+.linea-tiempo__paso::before { content: ''; position: absolute; left: 0.95rem; top: 2.3rem; bottom: -0.4rem; width: 2px; background: var(--linea); }
+.linea-tiempo__paso:last-child::before { display: none; }
+.linea-tiempo__punto { display: grid; place-items: center; width: 1.9rem; height: 1.9rem; flex: none; border-radius: 50%; background: var(--mantequilla); color: var(--gris); font-weight: 700; font-size: 0.85rem; z-index: 1; }
+.linea-tiempo__paso--hecho { color: var(--marino); font-weight: 600; }
+.linea-tiempo__paso--hecho .linea-tiempo__punto { background: var(--verde); color: var(--blanco); }

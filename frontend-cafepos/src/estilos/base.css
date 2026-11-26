@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+/* ==========================================================================
+   index.css — sistema visual de Cafepos.
+   Paleta y tipografía tomadas del diseño en Figma:
+   Mantequilla, Azul profundo, Marino, Azul pastel, Verde hoja,
+   Coral cálido, Gris azulado y Rojo mima.
+   Baloo 2 ExtraBold para marca/títulos/números grandes; DM Sans para el resto.
+   ========================================================================== */
+
+:root {
+  --mantequilla: #FCF3DA;
+  --azul: #1C3A86;
+  --marino: #0F1F4A;
+  --azul-pastel: #CFE0F7;
+  --verde: #5E8F3E;
+  --verde-claro: #CFE3B4;
+  --coral: #F4806A;
+  --coral-claro: #F9C9BC;
+  --gris: #56627F;
+  --rojo: #930500;
+
+  --blanco: #ffffff;
+  --linea: #E5E1D2;
+  --sombra: 0 2px 8px rgba(15, 31, 74, 0.07);
+  --sombra-alta: 0 12px 32px rgba(15, 31, 74, 0.16);
+  --radio: 18px;
+
+  font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--marino);
+  background: var(--mantequilla);
+  line-height: 1.55;
+  font-synthesis: none;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+h1, h2, h3 {
+  font-family: 'Baloo 2', 'DM Sans', sans-serif;
+  font-weight: 800;
+  color: var(--marino);
+  line-height: 1.15;
+  margin: 0 0 0.4rem;
+}
+h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.05rem; }
+p { margin: 0 0 0.7rem; }
+a { color: var(--azul); }
+button, input, select { font: inherit; }
+
+.numero { font-variant-numeric: tabular-nums; font-weight: 700; }
